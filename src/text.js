@@ -12,6 +12,8 @@ class AwesomeText extends PIXI.mesh.Mesh {
     this._font = font.glyphs;
     this._texture = font.texture;
     this.pluginName = 'AwesomeTextRenderer';
+
+    this.sdf_size = 1;
   }
 
   updateText() {
@@ -148,22 +150,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
     return uvs;
 
-  }
-
-  getPages(glyphs) {
-
-    const pages = new Float32Array(glyphs.length * 4);
-    let i = 0;
-
-    glyphs.forEach (glyph => {
-      const id = glyph.data.page || 0;
-      pages[i++] = id;
-      pages[i++] = id;
-      pages[i++] = id;
-      pages[i++] = id;
-    });
-
-    return pages;
   }
 
 }

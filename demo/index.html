@@ -31,24 +31,28 @@
 <script>
 
 
+  PIXI.settings.MIPMAP_TEXTURES = false;
+
   var app = new PIXI.Application(800, 600, {
-    transparent: true
+    transparent: true,
+    antialias: true
   });
 
   document.body.appendChild(app.view);
 
   var style = new PIXI.TextStyle({
-    fontSize: 24,
+    fontSize: 13,
     fontWeight: 'bold',
-    fill: 0x39FF14,
+    fill: 0xFFFFff,
     align: 'left',
     wordWrapWidth: 400,
     lineHeight: 64,
   });
 
+
   var fontData = {
-    data: 'assets/Lato-Regular-64.fnt',
-    image: 'assets/lato.png'
+    data: 'assets/Roboto-Regular.fnt',
+    image: 'assets/Roboto-Regular.png'
   };
 
 
@@ -56,7 +60,7 @@
 
       PIXI.loader.add(fontData.image, fontData.image).load((loader, resources) => {
 
-        window.text = new PIXI.extras.AwesomeText('A', style, {
+        window.text = new PIXI.extras.AwesomeText('ADD FIELD', style, {
           glyphs: font,
           texture: resources[fontData.image].texture
         });

@@ -1,6 +1,7 @@
 import AwesomeText from './text'
 import vertexShader from './shaders/vert.glsl';
 import fragmentShader from './shaders/frag.glsl';
+import loadFont from 'load-bmfont'
 
 
 const glCore = PIXI.glCore;
@@ -57,15 +58,19 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
 
     renderer.state.setBlendMode(awesomeText.blendMode);
 
+    console.log(PIXI.utils.hex2rgb(awesomeText.style.fill));
+
     glData.shader.uniforms.uSampler = renderer.bindTexture(texture);
     glData.shader.uniforms.translationMatrix = awesomeText.worldTransform.toArray(true);
     glData.shader.uniforms.u_fontInfoSize = awesomeText.style.fontSize / font.info.size;
     glData.shader.uniforms.u_alpha = awesomeText.worldAlpha;
-    glData.shader.uniforms.u_color = awesomeText.style.fill;
+    glData.shader.uniforms.u_color = PIXI.utils.hex2rgb(awesomeText.style.fill.replace("#", "0x"));
     glData.shader.uniforms.u_fontSize = awesomeText.style.fontSize;
-    glData.shader.uniforms.u_fontInfoSize = awesomeText.style.fontSize / font.info.size;
     glData.shader.uniforms.u_weight = awesomeText.style.weight;
-    //glData.shader.uniforms.tint = sdfText.tintRgb;
+
+    // NEW PARAMS
+    glData.shader.uniforms.sdf_size = awesomeText.sdf_size;
+    glData.shader.uniforms.sdf_tex_size = font.common.scaleW;
 
     const drawMode = awesomeText.drawMode = gl.TRIANGLES;
     glData.vao.draw(drawMode, awesomeText.indices.length, 0);
@@ -98,6 +103,6 @@ PIXI.WebGLRenderer.registerPlugin('AwesomeTextRenderer', AwesomeTextRenderer);
 
 Object.assign(PIXI.extras, {
   AwesomeText: AwesomeText,
-  //loadFont: loadFont
+  loadFont: loadFont
 });
 
