@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SDF text renderer example</title>
+    <script src="./assets/OpenSans-Regular.js"></script>
+    <script src="../node_modules/pixi.js/dist/pixi.min.js"></script>
+    <script src="../dist/pixi-awesome-text.js"></script>
+    <style>
+        html, body {
+            background-color: black;
+            color: white;
+        }
+        a, a:visited {
+            color: #39FF14;
+        }
+    </style>
+</head>
+<body>
+<div style="position: absolute; top: 0; left: 0; padding-left: 20px; font-family: 'Helvetica Neue', Arial; pointer-events: none;">
+    <h1>Pixi-sdf-text</h1>
+    <h2>Signed distance fields text implementation for PixiJS</h2>
+    <p>Essentially <a href="https://www.mapbox.com/blog/text-signed-distance-fields/">SDF is the most efficient way to draw text in WebGL</a>. <br>
+        It uses <a href="./assets/OpenSans-Regular.png">special kind of raster atlases</a> and GLSL shader to <a href="http://wdobbie.com/pdf/">draw vector scalable text in a very performant way</a> on GPU.</p>
+    <p style="display: inline-block;">Ensure it scales well staying sharp even when rotating, </p>
+    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.fill = 0xffffff;">change text color</button>
+    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.align = 'right';">change text align</button>
+    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.fontSize = '80';">change text size</button>
+    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.text = 'Lorem ipsum dolor sit amet';">change text copy</button>
+</div>
+<script>
+
+
+  var app = new PIXI.Application(800, 600, {
+    transparent: true
+  });
+
+  document.body.appendChild(app.view);
+
+  var style = new PIXI.TextStyle({
+    fontSize: 24,
+    fontWeight: 'bold',
+    fill: 0x39FF14,
+    align: 'left',
+    wordWrapWidth: 400,
+    lineHeight: 64,
+  });
+
+  var fontData = {
+    data: 'assets/Lato-Regular-64.fnt',
+    image: 'assets/lato.png'
+  };
+
+
+  PIXI.extras.loadFont(fontData.data, (err, font) => {
+
+      PIXI.loader.add(fontData.image, fontData.image).load((loader, resources) => {
+
+        window.text = new PIXI.extras.AwesomeText('A', style, {
+          glyphs: font,
+          texture: resources[fontData.image].texture
+        });
+
+        text.x = app.renderer.width / 2;
+        text.y = app.renderer.height / 2;
+
+        app.stage.addChild(text);
+
+        text.updateText();
+
+      });
+    });
+
+
+</script>
+</body>
+</html>
