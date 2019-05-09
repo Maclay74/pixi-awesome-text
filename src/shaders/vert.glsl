@@ -22,7 +22,7 @@ void main2(void)
 void main(void) {
 
     vTextureCoord = aTextureCoord;
-    doffset = clamp(0.0, 0.6, sdf_size / u_fontInfoSize / 2.5);
+    doffset = clamp(0.0, 0.6, sdf_size / 2.5);
 
     sdf_texel = 1.0 / sdf_tex_size;
 

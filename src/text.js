@@ -7,16 +7,17 @@ class AwesomeText extends PIXI.mesh.Mesh {
   constructor(text, style, font) {
     super(font.texture);
 
-    this.style = style;
+    this.style = new PIXI.TextStyle(style);
+    this.backgroundColor = style.backgroundColor
     this._text = text;
     this._font = font.glyphs;
     this._texture = font.texture;
     this.pluginName = 'AwesomeTextRenderer';
 
-    this.sdf_size = 1;
+    this.sdf_size = style.sdfSize || 1.0;
   }
 
-  updateText() {
+  update() {
 
     this.layout = createLayout({
       text: this._text,
@@ -153,6 +154,8 @@ class AwesomeText extends PIXI.mesh.Mesh {
   }
 
 }
+
+AwesomeText.scale = 1.0;
 
 export default AwesomeText;
 

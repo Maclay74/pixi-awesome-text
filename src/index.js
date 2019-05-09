@@ -31,7 +31,7 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
     }
 
     if (awesomeText.styleID !== awesomeText.style.styleID) {
-      awesomeText.updateText();
+      awesomeText.update();
     }
 
     let glData = awesomeText._glDatas[renderer.CONTEXT_UID];
@@ -53,24 +53,27 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
       glData.indexBuffer.upload(awesomeText.indices);
     }
 
+
     glData.vertexBuffer.upload(awesomeText.vertices);
     renderer.bindShader(glData.shader);
 
     renderer.state.setBlendMode(awesomeText.blendMode);
 
-    console.log(PIXI.utils.hex2rgb(awesomeText.style.fill));
+
 
     glData.shader.uniforms.uSampler = renderer.bindTexture(texture);
     glData.shader.uniforms.translationMatrix = awesomeText.worldTransform.toArray(true);
     glData.shader.uniforms.u_fontInfoSize = awesomeText.style.fontSize / font.info.size;
     glData.shader.uniforms.u_alpha = awesomeText.worldAlpha;
     glData.shader.uniforms.u_color = PIXI.utils.hex2rgb(awesomeText.style.fill.replace("#", "0x"));
+    glData.shader.uniforms.bg_color = PIXI.utils.hex2rgb(awesomeText.backgroundColor.replace("#", "0x"));
     glData.shader.uniforms.u_fontSize = awesomeText.style.fontSize;
     glData.shader.uniforms.u_weight = awesomeText.style.weight;
 
     // NEW PARAMS
-    glData.shader.uniforms.sdf_size = awesomeText.sdf_size;
+    glData.shader.uniforms.sdf_size = awesomeText.sdf_size * PIXI.extras.AwesomeText.scale;
     glData.shader.uniforms.sdf_tex_size = font.common.scaleW;
+
 
     const drawMode = awesomeText.drawMode = gl.TRIANGLES;
     glData.vao.draw(drawMode, awesomeText.indices.length, 0);

@@ -1,31 +1,7 @@
-
-
-void main2(void)
-{
-
-    gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-
-    /*float smoothing = 1. / u_fontSize * 6.;
-    float debug = 0.0;
-
-    vec2 textureCoord = vTextureCoord * 2.;
-    float dist = texture2D(uSampler, vTextureCoord).a;
-
-    if (debug > 0.0) {
-        gl_FragColor = vec4(dist, dist, dist, 1);
-    } else {
-        float alpha = smoothstep(u_weight - smoothing, u_weight + smoothing, dist);
-
-        vec3 color = u_color * alpha;
-
-        gl_FragColor = vec4(color, alpha) * u_alpha;
-    }*/
-}
-
-
 precision mediump float;
 
 uniform sampler2D uSampler;
+uniform vec3 bg_color;
 uniform vec3 u_color;
 
 varying vec2  vTextureCoord;
@@ -91,7 +67,7 @@ void main() {
 
     float hint_amount = 0.0;
     float subpixel_amount = 2.0;
-    vec3 bg_color = vec3(0.0, 0.0,0.0);
+    //vec3 bg_color = vec3(0.0, 0.0,0.0);
     //vec3 u_color = vec3(1.0,1.0, 1.0);
 
 
