@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>SDF text renderer example</title>
-    <script src="./assets/OpenSans-Regular.js"></script>
-    <script src="../node_modules/pixi.js/dist/pixi.min.js"></script>
+    <script src="./assets/roboto.js"></script>
+    <script src="../node_modules/pixi.js/dist/pixi.js"></script>
     <script src="../dist/pixi-awesome-text.js"></script>
     <style>
         html, body {
@@ -40,41 +40,42 @@
 
   document.body.appendChild(app.view);
 
-  var style ={
-    fontSize: 13,
-    fontWeight: 'bold',
-    fill: 0xFFFFff,
-    align: 'left',
-    wordWrapWidth: 400,
-    lineHeight: 64,
-    backgroundColor: '#9B5BD0'
-  };
-
 
   var fontData = {
-    data: 'assets/Roboto-Regular.fnt',
-    image: 'assets/Roboto-Regular.png'
+    data: 'assets/robot.js',
+    image: 'assets/roboto.png'
   };
 
+  PIXI.loader.add(fontData.image, fontData.image).load((loader, resources) => {
 
-  PIXI.extras.loadFont(fontData.data, (err, font) => {
+    font = roboto_font;
+    font.tex = resources[fontData.image].texture
 
-      PIXI.loader.add(fontData.image, fontData.image).load((loader, resources) => {
+    window.text = new PIXI.extras.AwesomeText('hello buddy', {
+      fontSize: 20,
+      backgroundColor: '#000000',
+      fill: '#ffffff'
+    }, font);
 
-        window.text = new PIXI.extras.AwesomeText('ADD FIELD', style, {
-          glyphs: font,
-          texture: resources[fontData.image].texture
-        });
 
-        text.x = app.renderer.width / 2;
-        text.y = app.renderer.height / 2;
+    text.x = 50;
+    text.y = app.renderer.height / 2;
 
-        app.stage.addChild(text);
 
-        text.update();
+    let restRect = new PIXI.Graphics();
+    restRect.beginFill(0x00ff00);
+    restRect.drawRect(text.x, text.y, 141, 37);
+    restRect.endFill();
 
-      });
-    });
+    app.stage.addChild(restRect);
+
+
+    app.stage.addChild(text);
+
+    text.update();
+
+  });
+
 
 
 </script>

@@ -1,8 +1,6 @@
 import AwesomeText from './text'
 import vertexShader from './shaders/vert.glsl';
 import fragmentShader from './shaders/frag.glsl';
-import loadFont from 'load-bmfont'
-
 
 const glCore = PIXI.glCore;
 
@@ -11,30 +9,29 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
   constructor(renderer) {
     super(renderer);
     this.shader = null;
+
   }
 
   onContextChange() {
     const gl = this.renderer.gl;
     gl.getExtension("OES_standard_derivatives");
+
     this.shader = new PIXI.Shader(gl, vertexShader, fragmentShader);
+
   }
 
   render(awesomeText) {
 
     const renderer = this.renderer;
     const gl = renderer.gl;
-    const texture = awesomeText._texture;
+    const texture = awesomeText._font.tex;
     const font = awesomeText._font;
 
-    if (!texture || !texture.valid || !font) {
-      return;
-    }
-
-    if (awesomeText.styleID !== awesomeText.style.styleID) {
-      awesomeText.update();
-    }
+    const fontSize = awesomeText.style.fontSize;
 
     let glData = awesomeText._glDatas[renderer.CONTEXT_UID];
+
+    //awesomeText.update();
 
     if (!glData) {
       renderer.bindVao(null);
@@ -53,27 +50,18 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
       glData.indexBuffer.upload(awesomeText.indices);
     }
 
-
     glData.vertexBuffer.upload(awesomeText.vertices);
     renderer.bindShader(glData.shader);
 
     renderer.state.setBlendMode(awesomeText.blendMode);
 
-
-
     glData.shader.uniforms.uSampler = renderer.bindTexture(texture);
     glData.shader.uniforms.translationMatrix = awesomeText.worldTransform.toArray(true);
-    glData.shader.uniforms.u_fontInfoSize = awesomeText.style.fontSize / font.info.size;
-    glData.shader.uniforms.u_alpha = awesomeText.worldAlpha;
-    glData.shader.uniforms.u_color = PIXI.utils.hex2rgb(awesomeText.style.fill.replace("#", "0x"));
-    glData.shader.uniforms.bg_color = PIXI.utils.hex2rgb(awesomeText.backgroundColor.replace("#", "0x"));
-    glData.shader.uniforms.u_fontSize = awesomeText.style.fontSize;
-    glData.shader.uniforms.u_weight = awesomeText.style.weight;
 
-    // NEW PARAMS
-    glData.shader.uniforms.sdf_size = awesomeText.sdf_size * PIXI.extras.AwesomeText.scale;
-    glData.shader.uniforms.sdf_tex_size = font.common.scaleW;
-
+    glData.shader.uniforms.hint_amount = 1.0;
+    glData.shader.uniforms.subpixel_amount = 1.0;
+    glData.shader.uniforms.font_color = PIXI.utils.hex2rgb("0xffffff");
+    glData.shader.uniforms.bg_color = PIXI.utils.hex2rgb("0x9B5BD0");
 
     const drawMode = awesomeText.drawMode = gl.TRIANGLES;
     glData.vao.draw(drawMode, awesomeText.indices.length, 0);
@@ -81,10 +69,12 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
   }
 
   buildGlData(awesomeText, gl) {
+
     const glData = {
       shader: this.shader,
       vertexBuffer: glCore.GLBuffer.createVertexBuffer(gl, awesomeText.vertices, gl.STREAM_DRAW),
       uvBuffer: glCore.GLBuffer.createVertexBuffer(gl, awesomeText.uvs, gl.STREAM_DRAW),
+      sdfBuffer: glCore.GLBuffer.createVertexBuffer(gl, awesomeText.sdfSizes, gl.STATIC_DRAW),
       indexBuffer: glCore.GLBuffer.createIndexBuffer(gl, awesomeText.indices, gl.STATIC_DRAW),
       // build the vao object that will render..
       vao: null,
@@ -95,17 +85,19 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
     glData.vao = new glCore.VertexArrayObject(gl)
       .addIndex(glData.indexBuffer)
       .addAttribute(glData.vertexBuffer, glData.shader.attributes.aVertexPosition, gl.FLOAT, false, 2 * 4, 0)
-      .addAttribute(glData.uvBuffer, glData.shader.attributes.aTextureCoord, gl.FLOAT, false, 2 * 4, 0);
+      .addAttribute(glData.uvBuffer, glData.shader.attributes.aTextureCoord, gl.FLOAT, false, 2 * 4, 0)
+      .addAttribute(glData.sdfBuffer, glData.shader.attributes.aSdfSize, gl.FLOAT, false, 4, 0);
 
     return glData
   }
+
 
 }
 
 PIXI.WebGLRenderer.registerPlugin('AwesomeTextRenderer', AwesomeTextRenderer);
 
 Object.assign(PIXI.extras, {
-  AwesomeText: AwesomeText,
-  loadFont: loadFont
+  AwesomeText: AwesomeText
+
 });
 

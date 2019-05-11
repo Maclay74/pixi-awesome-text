@@ -1,10 +1,11 @@
-precision mediump float;
-
 uniform sampler2D uSampler;
-uniform vec3 bg_color;
-uniform vec3 u_color;
+uniform float hint_amount;
+uniform float subpixel_amount;
 
-varying vec2  vTextureCoord;
+uniform vec3 bg_color;
+uniform vec3 font_color;
+
+varying vec2  tc0;
 varying float doffset;
 varying float sdf_texel;
 
@@ -51,43 +52,28 @@ vec3 subpixel( float v, float a ) {
     return res;
 }
 
-float median(float r, float g, float b) {
-    return max(min(r, g), min(max(r, g), b));
+void main2() {
+    gl_FragColor = texture2D(uSampler, tc0);
 }
 
-float sampleMSDF(sampler2D source, vec2 UV) {
-    vec4 _sample = texture2D(source, UV);
-    return  median(_sample.r, _sample.g, _sample.b) + 0.1;
-
-}
-
-
-void main() {
-
-
-    float hint_amount = 0.0;
-    float subpixel_amount = 2.0;
-    //vec3 bg_color = vec3(0.0, 0.0,0.0);
-    //vec3 u_color = vec3(1.0,1.0, 1.0);
-
+void main(void) {
 
     // Sampling the texture, L pattern
-    float sdf       = sampleMSDF( uSampler, vTextureCoord );
-    float sdf_north = sampleMSDF( uSampler, vTextureCoord + vec2( 0.0, sdf_texel ) );
-    float sdf_east  = sampleMSDF( uSampler, vTextureCoord + vec2( sdf_texel, 0.0 ) );
+    float sdf       = texture2D( uSampler, tc0 ).r;
+    float sdf_north = texture2D( uSampler, tc0 + vec2( 0.0, sdf_texel ) ).r;
+    float sdf_east  = texture2D( uSampler, tc0 + vec2( sdf_texel, 0.0 ) ).r;
 
     // Estimating stroke direction by the distance field gradient vector
     vec2  sgrad     = vec2( sdf_east - sdf, sdf_north - sdf );
     float sgrad_len = max( length( sgrad ), 1.0 / 128.0 );
     vec2  grad      = sgrad / vec2( sgrad_len );
-    float vgrad = abs( grad.y ) + 0.1;// 0.0 - vertical stroke, 1.0 - horizontal one
+    float vgrad = abs( grad.y ); // 0.0 - vertical stroke, 1.0 - horizontal one
 
     float horz_scale  = 1.1; // Blurring vertical strokes along the X axis a bit
     float vert_scale  = 0.6; // While adding some contrast to the horizontal strokes
     float hdoffset    = mix( doffset * horz_scale, doffset * vert_scale, vgrad );
     float res_doffset = mix( doffset, hdoffset, hint_amount );
 
-    //float alpha       = smoothstep( 0.5 - res_doffset, 0.5 + res_doffset, sdf ) - 0.5;
     float alpha       = smoothstep( 0.5 - res_doffset, 0.5 + res_doffset, sdf );
 
     // Additional contrast
@@ -100,14 +86,11 @@ void main() {
     // Discarding pixels beyond a threshold to minimise possible artifacts.
     if ( alpha < 20.0 / 256.0 ) discard;
 
-    vec3 channels = subpixel( grad.x * 0.5 * subpixel_amount, alpha ) + 0.3;
-
+    vec3 channels = subpixel( grad.x * 0.5 * subpixel_amount, alpha ) + 0.1;
 
     // For subpixel rendering we have to blend each color channel separately
-    vec3 res = mix( bg_color, u_color, channels );
-
+    vec3 res = mix( bg_color, font_color, channels );
     gl_FragColor = vec4( res, 1.0 );
 }
-
 
 

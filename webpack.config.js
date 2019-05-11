@@ -31,7 +31,7 @@ module.exports = {
   },
   plugins: [
     //new Visualizer(),
-     new uglifyJsPlugin({
+     /*new uglifyJsPlugin({
         minimize: true,
         sourceMap: false,
         output: {
@@ -40,6 +40,6 @@ module.exports = {
         compressor: {
             warnings: false
         }
-    })
+    })*/
   ]
 }
