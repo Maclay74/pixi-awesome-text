@@ -20,16 +20,15 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
 
   render(awesomeText) {
 
+    if (awesomeText.styleID !== awesomeText.style.styleID) {
+      awesomeText.update();
+    }
+
     const renderer = this.renderer;
     const gl = renderer.gl;
     const texture = awesomeText.texture;
-    const font = awesomeText.font;
-
-    const fontSize = awesomeText.style.fontSize;
 
     let glData = awesomeText._glDatas[renderer.CONTEXT_UID];
-
-    //awesomeText.update();
 
     if (!glData) {
       renderer.bindVao(null);
@@ -79,8 +78,6 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
       indexDirty: awesomeText.indexDirty,
     };
 
-
-
     glData.vao = new glCore.VertexArrayObject(gl)
       .addIndex(glData.indexBuffer)
       .addAttribute(glData.vertexBuffer, glData.shader.attributes.aVertexPosition, gl.FLOAT, false, 2 * 4, 0)
@@ -90,13 +87,11 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
     return glData
   }
 
-
 }
 
 PIXI.WebGLRenderer.registerPlugin('AwesomeTextRenderer', AwesomeTextRenderer);
 
 Object.assign(PIXI.extras, {
   AwesomeText: AwesomeText
-
 });
 

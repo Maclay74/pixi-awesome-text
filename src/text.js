@@ -14,8 +14,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
     //TODO separate font and texture
     this._texture = font.texture;
     this.pluginName = 'AwesomeTextRenderer';
-
-
   }
 
   update() {
@@ -25,6 +23,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
       wrapWords: this.style.breakWords,
       wrapperWidth: this.style.wordWrapWidth,
       align: this.style.align,
+      lineHeight: this.style.lineHeight,
     });
 
     this.metrics = this.fontMetrics( this.font, this.style.fontSize, this.style.fontSize * 0.2 );
@@ -206,26 +205,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
     //return { vertices : vertices, pos : [ new_pos_x, pos[1] ] };
   }
 
-  getStringSize(string) {
-
-    let width = 0;
-    let height = this.metrics.line_height;
-
-    const chars = [...string];
-
-    chars.forEach(char => {
-      let font_char = this.font.chars[ char ];
-
-      if (char === " ") {
-        width += this.font.space_advance * this.metrics.cap_scale;
-        return;
-      }
-
-      let charRect = this.charRect([width,0], this.font, this.metrics, font_char, 0.2);
-      width = charRect.pos[0];
-    });
-
-  }
 
 }
 

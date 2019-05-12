@@ -14,6 +14,7 @@ class TextLayout {
   lettersCount = 0;
   height = 0;
   linesCount = 0;
+  lineHeight = 0;
 
 
   constructor(text, font, config) {
@@ -22,10 +23,10 @@ class TextLayout {
     this.fontSize = config.fontSize;
     this.wrapWords = config.wrapWords;
     this.wrapperWidth = config.wrapperWidth;
+    this.lineHeight = config.lineHeight;
     this.align = config.align;
     this.lettersCount = this.text.split("").length;
-    this.metrics = this.fontMetrics(font, 0.2);
-
+    this.metrics = this.fontMetrics(font, 0.0);
     this.startY = this.metrics.lineHeight;
     this.calculateWordsPositions();
   }
@@ -37,7 +38,12 @@ class TextLayout {
     const capScale = this.fontSize / cap_height;
     const lowScale = Math.round( x_height * capScale ) / x_height;
     const ascent = Math.round( fontAscent * capScale );
-    const lineHeight = Math.round( capScale * ( fontAscent + descent + line_gap ) + moreLineGap );
+    let lineHeight = Math.round( capScale * ( fontAscent + descent + line_gap ) + moreLineGap );
+
+    if (this.lineHeight > 0)
+      lineHeight = this.lineHeight;
+    else
+      this.lineHeight = lineHeight;
 
     return {
       capScale   : capScale,
@@ -50,7 +56,6 @@ class TextLayout {
   charRect( pos, font_char, kern = 0.0 ) {
 
     const {ascent, lowScale, capScale} = this.metrics;
-
 
     const { descent, row_height, iy, ix } = this.font;
 
