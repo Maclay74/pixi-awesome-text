@@ -1,6 +1,5 @@
-//import { mesh } from 'pixi.js'
-import createLayout from 'layout-bmfont-text'
 import createIndices from 'quad-indices'
+import TextLayout from './layout'
 
 class AwesomeText extends PIXI.mesh.Mesh {
 
@@ -8,63 +7,46 @@ class AwesomeText extends PIXI.mesh.Mesh {
     super(font.texture);
 
     this.style = new PIXI.TextStyle(style);
-    this.backgroundColor = style.backgroundColor
+    this.backgroundColor = style.backgroundColor;
     this._text = text;
-    this._font = font;
+    this._font = font.font;
 
     //TODO separate font and texture
-    this._texture = font.tex;
+    this._texture = font.texture;
     this.pluginName = 'AwesomeTextRenderer';
+
 
   }
 
   update() {
 
-
-    /*this.layout = createLayout({
-      text: this._text,
-      font: this._font,
-      align: this.style.align,
+    this.layout = new TextLayout(this.text, this.font, {
       fontSize: this.style.fontSize,
-      fill: this.style.fill,
-      fontWeight: this.style.fontWeight,
-      width: this.style.wordWrapWidth,
-      wordWrapWidth: this.style.wordWrapWidth,
-      lineHeight: this.style.lineHeight
-    });*/
-
-
-    /*const textureSize = {
-      width: this._font.common.scaleW,
-      height: this._font.common.scaleH
-    };*/
-
-    /*this.visibleGlyphs = this.layout.glyphs.filter(glyph => {
-      return glyph.data.width * glyph.data.height > 0;
-    });*/
-
-    this.visibleGlyphs = this.text.split("");
-
+      wrapWords: this.style.breakWords,
+      wrapperWidth: this.style.wordWrapWidth,
+      align: this.style.align,
+    });
 
     this.metrics = this.fontMetrics( this.font, this.style.fontSize, this.style.fontSize * 0.2 );
-    this.vertices = new Float32Array(this.visibleGlyphs.length * 4 * 2);
-    this.uvs = new Float32Array(this.visibleGlyphs.length * 4 * 2);
-    this.sdfSizes = new Float32Array(this.visibleGlyphs.length * 4);
-    this.writeString(this.text, this.font, this.metrics, [0,0] );
+    this.vertices = new Float32Array(this.layout.lettersCount * 4 * 2);
+    this.uvs = new Float32Array(this.layout.lettersCount * 4 * 2);
+    this.sdfSizes = new Float32Array(this.layout.lettersCount * 4);
+
+    this.arrayPositions = { vertex: 0, uvs: 0, sdf: 0 };
+
+    this.layout.wordsMetrics.forEach (word => {
+      this.writeString(word.word, this.font, this.metrics, [word.x, word.y]);
+    });
 
     this.indices = createIndices({
       clockwise: true,
       type: 'uint16',
-      count: this.visibleGlyphs.length
+      count: this.layout.lettersCount
     });
 
     this.styleID = this.style.styleID;
     this.dirty++;
     this.indexDirty++;
-
-    let testString = this.getStringSize("hello buddy");
-
-
   }
 
   get text() {
@@ -91,9 +73,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
     let scale     = font_metrics.cap_scale;
 
     let str_pos = 0;
-    let vertices_array_pos = 0;
-    let uvs_array_pos = 0;
-    let sdf_array_pos = 0;
 
     for(;;) {
       if ( str_pos === string.length ) break;
@@ -128,9 +107,9 @@ class AwesomeText extends PIXI.mesh.Mesh {
       // calculating the glyph rectangle and copying it to the vertex array
       var rect = this.charRect( cpos, font, font_metrics, font_char, kern );
 
-      rect.positions.map((pos) => this.vertices[ vertices_array_pos++ ] = pos );
-      rect.uvs.map((uv) => this.uvs[ uvs_array_pos++ ] = uv );
-      rect.sdfSizes.map((sdf) => this.sdfSizes[ sdf_array_pos++ ] = sdf );
+      rect.positions.map((pos) => this.vertices[ this.arrayPositions.vertex++ ] = pos );
+      rect.uvs.map((uv) => this.uvs[ this.arrayPositions.uvs++ ] = uv );
+      rect.sdfSizes.map((sdf) => this.sdfSizes[ this.arrayPositions.sdf++ ] = sdf );
 
       prev_char = schar;
       cpos = rect.pos;
@@ -232,8 +211,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
     let width = 0;
     let height = this.metrics.line_height;
 
-    console.log(this.font);
-
     const chars = [...string];
 
     chars.forEach(char => {
@@ -248,7 +225,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
       width = charRect.pos[0];
     });
 
-    console.log(width, height);
   }
 
 }
@@ -256,7 +232,3 @@ class AwesomeText extends PIXI.mesh.Mesh {
 AwesomeText.scale = 1.0;
 
 export default AwesomeText;
-
-
-
-

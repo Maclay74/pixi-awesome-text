@@ -21,8 +21,14 @@ module.exports = {
       loader: 'babel-loader',
       query: {
         //plugins: ['transform-runtime'],
-        presets: ['es2015'],
-        plugins: ['transform-object-rest-spread']
+        presets: [
+          [ "@babel/preset-env" , { "modules": "commonjs" }]
+
+        ],
+        plugins: [
+          'transform-object-rest-spread',
+          "@babel/plugin-proposal-class-properties"
+        ]
       }
     },
       {test: /\.(glsl|frag|vert)$/, loader: 'raw', exclude: /node_modules/},

@@ -4,7 +4,8 @@
   "description": "Draw cool vector-like text with MSDF and sub-pixel AA.",
   "main": "index.js",
   "dependencies": {
-    "babel-preset-es2015": "^6.22.0",
+    "@babel/core": "^7.4.4",
+    "babel-jest": "^24.8.0",
     "glslify-loader": "^1.0.2",
     "imagesready": "^0.2.2",
     "layout-bmfont-text": "^1.3.3",
@@ -17,11 +18,12 @@
     "webpack-uglify-js-plugin": "^1.1.9"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
     "ava": "^0.17.0",
-    "babel-core": "^6.14.0",
-    "babel-loader": "^6.2.5",
-    "babel-plugin-syntax-object-rest-spread": "^6.13.0",
-    "babel-preset-es2015": "^6.14.0",
+    "babel-core": "^7.0.0-beta.3",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-syntax-object-rest-spread": "7.0.0-beta.3",
     "gulp": "^3.9.1",
     "gulp-util": "^3.0.7",
     "minimist": "^1.2.0",
@@ -44,6 +46,9 @@
     "text",
     "webgl"
   ],
+  "resolutions": {
+    "babel-plugin-transform-object-rest-spread": "^7.0.0-beta.3"
+  },
   "author": "Mike Finch",
   "license": "MIT",
   "bugs": {

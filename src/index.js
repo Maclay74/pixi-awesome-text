@@ -15,17 +15,15 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
   onContextChange() {
     const gl = this.renderer.gl;
     gl.getExtension("OES_standard_derivatives");
-
     this.shader = new PIXI.Shader(gl, vertexShader, fragmentShader);
-
   }
 
   render(awesomeText) {
 
     const renderer = this.renderer;
     const gl = renderer.gl;
-    const texture = awesomeText._font.tex;
-    const font = awesomeText._font;
+    const texture = awesomeText.texture;
+    const font = awesomeText.font;
 
     const fontSize = awesomeText.style.fontSize;
 
@@ -60,12 +58,11 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
 
     glData.shader.uniforms.hint_amount = 1.0;
     glData.shader.uniforms.subpixel_amount = 1.0;
-    glData.shader.uniforms.font_color = PIXI.utils.hex2rgb("0xffffff");
-    glData.shader.uniforms.bg_color = PIXI.utils.hex2rgb("0x9B5BD0");
+    glData.shader.uniforms.font_color = PIXI.utils.hex2rgb(awesomeText.style.fill.replace("#", "0x"));
+    glData.shader.uniforms.bg_color = PIXI.utils.hex2rgb(awesomeText.backgroundColor.replace("#", "0x"));
 
     const drawMode = awesomeText.drawMode = gl.TRIANGLES;
     glData.vao.draw(drawMode, awesomeText.indices.length, 0);
-
   }
 
   buildGlData(awesomeText, gl) {
@@ -81,6 +78,8 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
       dirty: awesomeText.dirty,
       indexDirty: awesomeText.indexDirty,
     };
+
+
 
     glData.vao = new glCore.VertexArrayObject(gl)
       .addIndex(glData.indexBuffer)

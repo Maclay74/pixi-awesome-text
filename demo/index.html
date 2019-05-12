@@ -49,34 +49,29 @@
   PIXI.loader.add(fontData.image, fontData.image).load((loader, resources) => {
 
     font = roboto_font;
-    font.tex = resources[fontData.image].texture
+    tex = resources[fontData.image].texture;
 
-    window.text = new PIXI.extras.AwesomeText('hello buddy', {
-      fontSize: 20,
-      backgroundColor: '#000000',
-      fill: '#ffffff'
-    }, font);
+    window.text = new PIXI.extras.AwesomeText("Hello darkness my old friend, i've come to talk with you again with you again", {
+      fontSize: 13,
+      backgroundColor: '#9B5BD0',
+      fill: '#ffffff',
+      breakWords: true,
+      wordWrapWidth: 500,
+      align: 'center'
+    }, {
+      font: font,
+      texture: tex
+    });
 
 
     text.x = 50;
     text.y = app.renderer.height / 2;
 
-
-    let restRect = new PIXI.Graphics();
-    restRect.beginFill(0x00ff00);
-    restRect.drawRect(text.x, text.y, 141, 37);
-    restRect.endFill();
-
-    app.stage.addChild(restRect);
-
+    text.update();
 
     app.stage.addChild(text);
 
-    text.update();
-
   });
-
-
 
 </script>
 </body>
