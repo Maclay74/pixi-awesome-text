@@ -25,7 +25,7 @@
     <p style="display: inline-block;">Ensure it scales well staying sharp even when rotating, </p>
     <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.fill = 0xffffff;">change text color</button>
     <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.align = 'right';">change text align</button>
-    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.fontSize = '800';">change text size</button>
+    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.fontSize = '80';">change text size</button>
     <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.text = 'Lorem ipsum dolor sit amet';">change text copy</button>
 </div>
 <script>
@@ -66,6 +66,9 @@
 
     text.x = 50;
     text.y = app.renderer.height / 2;
+
+    text.scale.y = 5;
+    text.scale.x = 5;
 
     text.update();
 

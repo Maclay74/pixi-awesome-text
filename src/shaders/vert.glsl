@@ -4,18 +4,18 @@ attribute float aSdfSize;
 
 uniform mat3 translationMatrix;
 uniform mat3 projectionMatrix;
-uniform mat3 transform;
-
+uniform float sdfMultiplier;
 
 varying vec2  tc0;
 varying float doffset;
 varying float sdf_texel;
 
 
+
 void main(void) {
 
     //TODO MAKE ATTRIBUTE
-    float sdf_size = aSdfSize;
+    float sdf_size = aSdfSize * sdfMultiplier;
 
     //TODO MAKE UNIFORMS
     float sdf_tex_size = 1024.0;

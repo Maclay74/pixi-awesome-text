@@ -149,6 +149,7 @@ class TextLayout {
     let x = this.startX;
     let y = this.startY;
 
+
     // Calculate words positions on lines
     words.forEach(word => {
       const wordSize = this.getStringSize(word);
@@ -170,23 +171,27 @@ class TextLayout {
       const wordsOnLine = this.wordsMetrics.filter(word => word.y === this.startY + (i * this.metrics.lineHeight))
 
       const lastWord = wordsOnLine[wordsOnLine.length - 1];
-      const freeSpace = (this.startX + this.wrapperWidth) - (lastWord.x + lastWord.width);
 
-      let leftOffset = 0;
+      if (lastWord) {
+        const freeSpace = (this.startX + this.wrapperWidth) - (lastWord.x + lastWord.width);
 
-      switch (this.align) {
-        case "center":
-          leftOffset = freeSpace / 2;
-          break;
-        case "right":
-          leftOffset = freeSpace;
-          break;
-      }
-      this.wordsMetrics.forEach(word => {
-        if (word.y === this.startY + (i * this.metrics.lineHeight)) {
-          word.x += leftOffset;
+        let leftOffset = 0;
+
+        switch (this.align) {
+          case "center":
+            leftOffset = freeSpace / 2;
+            break;
+          case "right":
+            leftOffset = freeSpace;
+            break;
         }
-      })
+        this.wordsMetrics.forEach(word => {
+          if (word.y === this.startY + (i * this.metrics.lineHeight)) {
+            word.x += leftOffset;
+          }
+        })
+      }
+
     }
 
   }

@@ -1,3 +1,5 @@
+import AwesomeText from "./text";
+
 const vertexShader = require("./shaders/vert.glsl");
 const fragmentShader = require("./shaders/frag.glsl");
 
@@ -57,6 +59,7 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
     glData.shader.uniforms.translationMatrix = awesomeText.worldTransform.toArray(true);
 
     glData.shader.uniforms.hint_amount = 1.0;
+    glData.shader.uniforms.sdfMultiplier = AwesomeText.scale;
     glData.shader.uniforms.subpixel_amount = 1.0;
     glData.shader.uniforms.font_color = PIXI.utils.hex2rgb(awesomeText.style.fill.replace("#", "0x"));
     glData.shader.uniforms.bg_color = PIXI.utils.hex2rgb(awesomeText.backgroundColor.replace("#", "0x"));
