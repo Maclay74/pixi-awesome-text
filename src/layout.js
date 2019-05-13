@@ -193,5 +193,6 @@ class TextLayout {
 
 }
 
+//module.exports = TextLayout;
 
 export default TextLayout;

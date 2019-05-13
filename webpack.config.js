@@ -5,13 +5,14 @@ var path = require('path');
 var uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 //var Visualizer = require('webpack-visualizer-plugin');
 
-module.exports = {
+const config = {
   watch: true,
-  entry: './index.js',
+  entry: './src/index',
   output: {
     path: './dist',
-    filename: pjson.name + '.js',
-    sourceMapFilename: pjson.name + ".js.map"
+    filename: 'pixi-awesome-text.min.js',
+    library: 'AwesomeText',
+    libraryTarget: 'umd'
   },
   devtool: "#inline-source-map",
   module: {
@@ -22,7 +23,7 @@ module.exports = {
       query: {
         //plugins: ['transform-runtime'],
         presets: [
-          [ "@babel/preset-env" , { "modules": false  }]
+          [ "@babel/preset-env" , { "modules": 'commonjs'  }]
 
         ],
         plugins: [
@@ -37,15 +38,49 @@ module.exports = {
   },
   plugins: [
     //new Visualizer(),
-     /*new uglifyJsPlugin({
-        minimize: true,
-        sourceMap: false,
-        output: {
-            comments: false
-        },
-        compressor: {
-            warnings: false
-        }
-    })*/
+    /*new uglifyJsPlugin({
+       minimize: true,
+       sourceMap: false,
+       output: {
+           comments: false
+       },
+       compressor: {
+           warnings: false
+       }
+   })*/
   ]
 }
+
+const moduleConfig = Object.assign({}, config, {
+  output: {
+    path: './dist',
+    filename: 'pixi-awesome-text.module.js',
+    library: 'AwesomeText',
+    libraryTarget: 'umd'
+  },
+
+});
+const includeConfig = Object.assign({}, config,{
+  output: {
+    path: './dist',
+    filename: 'pixi-awesome-text.min.js',
+  },
+
+  plugins: [
+    //new Visualizer(),
+    new uglifyJsPlugin({
+       minimize: true,
+       sourceMap: false,
+       output: {
+           comments: false
+       },
+       compressor: {
+           warnings: false
+       }
+   })
+  ]
+});
+
+module.exports = [
+  moduleConfig,includeConfig
+]

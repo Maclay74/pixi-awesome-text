@@ -1,8 +1,8 @@
 {
   "name": "pixi-awesome-text",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Draw cool vector-like text with MSDF and sub-pixel AA.",
-  "main": "index.js",
+  "main": "dist/pixi-awesome-text.module.js",
   "dependencies": {
     "imagesready": "^0.2.2",
     "object-diff": "0.0.3",
@@ -40,6 +40,8 @@
   "keywords": [
     "pixi",
     "msdf",
+    "sdf",
+    "antialias",
     "text",
     "webgl"
   ],

@@ -1,8 +1,9 @@
 const createIndices = require("quad-indices")
-const TextLayout = require("./layout")
-
+import TextLayout from './layout';
 
 class AwesomeText extends PIXI.mesh.Mesh {
+
+  static scale = 1.0;
 
   constructor(text, style, font) {
     super(font.texture);
@@ -209,6 +210,8 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
 }
 
-AwesomeText.scale = 1.0;
+
+
+//module.exports = AwesomeText;
 
 export default AwesomeText;

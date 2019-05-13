@@ -1,12 +1,9 @@
-const AwesomeText = require("./text");
 const vertexShader = require("./shaders/vert.glsl");
 const fragmentShader = require("./shaders/frag.glsl");
 
-import { ObjectRenderer, glCore } from 'pixi.js'
+const glCore = PIXI.glCore;
 
-//const glCore = PIXI.glCore;
-
-class AwesomeTextRenderer extends ObjectRenderer {
+class AwesomeTextRenderer extends PIXI.ObjectRenderer {
 
   static scale = 1.0
 
@@ -95,8 +92,4 @@ class AwesomeTextRenderer extends ObjectRenderer {
 
 PIXI.WebGLRenderer.registerPlugin('AwesomeTextRenderer', AwesomeTextRenderer);
 
-Object.assign(PIXI.extras, {
-  AwesomeText: AwesomeText
-});
-
-export default AwesomeText
+export default AwesomeTextRenderer
