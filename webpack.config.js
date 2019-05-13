@@ -7,7 +7,7 @@ var uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
 module.exports = {
   watch: true,
-  entry: './src/index.js',
+  entry: './index.js',
   output: {
     path: './dist',
     filename: pjson.name + '.js',
@@ -22,7 +22,7 @@ module.exports = {
       query: {
         //plugins: ['transform-runtime'],
         presets: [
-          [ "@babel/preset-env" , { "modules": "commonjs" }]
+          [ "@babel/preset-env" , { "modules": false  }]
 
         ],
         plugins: [

@@ -1,5 +1,6 @@
-import createIndices from 'quad-indices'
-import TextLayout from './layout'
+const createIndices = require("quad-indices")
+const TextLayout = require("./layout")
+
 
 class AwesomeText extends PIXI.mesh.Mesh {
 

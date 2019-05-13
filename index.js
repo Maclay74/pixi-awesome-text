@@ -1,10 +1,14 @@
-import AwesomeText from './text'
-import vertexShader from './shaders/vert.glsl';
-import fragmentShader from './shaders/frag.glsl';
+const AwesomeText = require("./text");
+const vertexShader = require("./shaders/vert.glsl");
+const fragmentShader = require("./shaders/frag.glsl");
 
-const glCore = PIXI.glCore;
+import { ObjectRenderer, glCore } from 'pixi.js'
 
-class AwesomeTextRenderer extends PIXI.ObjectRenderer {
+//const glCore = PIXI.glCore;
+
+class AwesomeTextRenderer extends ObjectRenderer {
+
+  static scale = 1.0
 
   constructor(renderer) {
     super(renderer);
@@ -95,3 +99,4 @@ Object.assign(PIXI.extras, {
   AwesomeText: AwesomeText
 });
 
+export default AwesomeText
