@@ -15,6 +15,7 @@ class TextLayout {
   height = 0;
   linesCount = 0;
   lineHeight = 0;
+  glyphs = [];
 
 
   constructor(text, font, config) {
@@ -29,9 +30,16 @@ class TextLayout {
     this.metrics = this.fontMetrics(font, 0.0);
     this.startY = this.metrics.lineHeight;
     this.calculateWordsPositions();
+
+    this.glyphs = [];
+
+    this.wordsMetrics.forEach (word => {
+      this.getGlyphs(word.word, [word.x, word.y]);
+    });
+
   }
 
-  fontMetrics(fontSize, moreLineGap = 0.0) {
+  fontMetrics(fontSize, moreLineGap = 0.2) {
 
     const {cap_height, x_height, ascent: fontAscent , descent, line_gap} = this.font;
 
@@ -55,35 +63,25 @@ class TextLayout {
 
   charRect( pos, font_char, kern = 0.0 ) {
 
-    const {ascent, lowScale, capScale} = this.metrics;
-
-    const { descent, row_height, iy, ix } = this.font;
-
-    const {flags, bearing_x, advance_x, rect } = font_char;
-
     // Low case characters have first bit set in 'flags'
-    var lowCase = ( flags & 1 ) === 1;
+    var lowcase = ( font_char.flags & 1 ) === 1;
 
     // Pen position is at the top of the line, Y goes up
-    var baseline = pos[1] - ascent;
+    var baseline = pos[1] - this.metrics.ascent;
 
     // Low case chars use their own scale
-    var scale = lowCase ? lowScale : capScale;
-
+    var scale = lowcase ? this.metrics.lowScale : this.metrics.capScale;
 
     // Laying out the glyph rectangle
-    var g      = rect;
-    var bottom = baseline - scale * ( descent + iy );
-    var top    = bottom   + scale * ( row_height );
-    var left   = pos[0]   + scale * ( bearing_x + kern - ix );
+    var g      = font_char.rect;
+    var bottom = baseline - scale * ( this.font.descent + this.font.iy );
+    var top    = bottom   + scale * ( this.font.row_height );
+    var left   = pos[0]   + scale * ( font_char.bearing_x + kern - this.font.ix );
     var right  = left     + scale * ( g[2] - g[0] );
     var p = [ left, top, right, bottom ];
 
     // Advancing pen position
-    var new_pos_x = pos[0] + scale * ( advance_x );
-
-    // Signed distance field size in screen pixels
-    var sdf_size  = 2.0 * iy * scale;
+    var new_pos_x = pos[0] + scale * ( font_char.advance_x );
 
     const positions = [
       p[0], p[3], // left bottom,
@@ -92,25 +90,10 @@ class TextLayout {
       p[0], p[1], // left top
     ];
 
-    const uvs = [
-      g[0], g[1], // left top
-      g[2], g[1], // right top
-      g[2], g[3], // right bottom,
-      g[0], g[3], // left bottom,
-    ];
-
-    const sdfSizes = [
-      sdf_size,
-      sdf_size,
-      sdf_size,
-      sdf_size,
-    ];
-
     return {
       positions,
-      uvs,
-      sdfSizes,
-      pos: [ new_pos_x, pos[1] ]
+      pos: [ new_pos_x, pos[1] ],
+      metrics: {x: pos[0], y: pos[1], width: scale * font_char.advance_x }
     };
   }
 
@@ -125,10 +108,10 @@ class TextLayout {
     chars.forEach(char => {
       let font_char = this.font.chars[ char ];
 
-      if (char === " ") {
+      /*if (char === " ") {
         width += this.font.space_advance * this.metrics.capScale;
         return;
-      }
+      }*/
 
       // Get char metrics
       let charRect = this.charRect([width,0], font_char, 0.2);
@@ -143,11 +126,17 @@ class TextLayout {
   calculateWordsPositions() {
 
     const words = this.text.split(" ");
+
+    for (let i = 0; i < words.length - 1; i++) {
+      words[i] = words[i] + " ";
+    }
+
     this.wordsMetrics = [];
 
     // Initial position
     let x = this.startX;
     let y = this.startY;
+
 
 
     // Calculate words positions on lines
@@ -158,13 +147,14 @@ class TextLayout {
         y += wordSize.height;
       }
       this.wordsMetrics.push({...wordSize, x, y, word});
-      x += wordSize.width + this.font.space_advance * this.metrics.capScale;
+
+      //x += wordSize.width + this.font.space_advance * this.metrics.capScale;
+      x += wordSize.width;
     });
 
     // Calculate lines count
     this.linesCount = (y - this.startY) / this.metrics.lineHeight + 1;
     this.height = this.linesCount * this.metrics.lineHeight;
-
 
     // Change align TODO optimise
     for (let i = 0; i < this.linesCount; ++i) {
@@ -191,13 +181,62 @@ class TextLayout {
           }
         })
       }
-
     }
-
   }
 
+  getGlyphs( string, pos) {
+    let prev_char = " ";  // Used to calculate kerning
+    let cpos      = pos;  // Current pen position
+    let x_max     = 0.0;  // Max width - used for bounding box
+    let scale     = this.metrics.capScale;
+
+    let str_pos = 0;
+
+    for(;;) {
+      if ( str_pos === string.length ) break;
+
+      var schar = string[ str_pos ];
+      str_pos++;
+
+      if ( schar === "\n" ) {
+        if ( cpos[0] > x_max ) x_max = cpos[0]; // Expanding the bounding rect
+        cpos[0]  = pos[0];
+        cpos[1] -= this.metrics.lineHeight;
+        prev_char = " ";
+        continue;
+      }
+
+      if ( schar === " " ) {
+        //schar = "_"
+        //cpos[0] += this.font.space_advance * scale;
+        prev_char = " ";
+        //continue;
+      }
+
+      var font_char = this.font.chars[ schar ];
+      if ( !font_char ) {                         // Substituting unavailable characters with '?'
+        schar = "?";
+        font_char = this.font.chars[ "?" ];
+      }
+
+      var kern = this.font.kern[ prev_char + schar ];
+      if ( !kern ) kern = 0.0;
+
+      // calculating the glyph rectangle and copying it to the vertex array
+      var rect = this.charRect( cpos, font_char, kern );
+
+      prev_char = schar;
+      cpos = rect.pos;
+
+      this.glyphs.push({
+        letter: schar,
+        vertices: rect.positions,
+        position: rect.pos,
+        metrics: rect.metrics
+      });
+    }
+  }
 }
 
-//module.exports = TextLayout;
 
 export default TextLayout;

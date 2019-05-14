@@ -1,9 +1,17 @@
 const createIndices = require("quad-indices")
 import TextLayout from './layout';
+import Select from './select'
 
 class AwesomeText extends PIXI.mesh.Mesh {
 
   static scale = 1.0;
+  static states = {regular: 0, editable: 1, selecting: 2}
+
+  static currentEditingElement = null;
+
+  pluginName = 'AwesomeTextRenderer';
+  state = AwesomeText.states.regular;
+  clicksCount = 0;
 
   constructor(text, style, font) {
     super(font.texture);
@@ -12,13 +20,16 @@ class AwesomeText extends PIXI.mesh.Mesh {
     this.backgroundColor = style.backgroundColor;
     this._text = text;
     this._font = font.font;
-
-    //TODO separate font and texture
     this._texture = font.texture;
-    this.pluginName = 'AwesomeTextRenderer';
+
+    this.interactive = true;
+    this.buttonMode = true;
+
+    this.setState(AwesomeText.states.regular);
   }
 
   update() {
+    this.metrics = this.fontMetrics(this.style.fontSize);
 
     this.layout = new TextLayout(this.text, this.font, {
       fontSize: this.style.fontSize,
@@ -28,12 +39,13 @@ class AwesomeText extends PIXI.mesh.Mesh {
       lineHeight: this.style.lineHeight,
     });
 
-    this.metrics = this.fontMetrics( this.font, this.style.fontSize, this.style.fontSize * 0.2 );
     this.vertices = new Float32Array(this.layout.lettersCount * 4 * 2);
     this.uvs = new Float32Array(this.layout.lettersCount * 4 * 2);
     this.sdfSizes = new Float32Array(this.layout.lettersCount * 4);
 
     this.arrayPositions = { vertex: 0, uvs: 0, sdf: 0 };
+
+    this.select = new Select(this.metrics, this.layout);
 
     this.layout.wordsMetrics.forEach (word => {
       this.writeString(word.word, this.font, this.metrics, [word.x, word.y]);
@@ -46,8 +58,39 @@ class AwesomeText extends PIXI.mesh.Mesh {
     });
 
     this.styleID = this.style.styleID;
-    this.dirty++;
-    this.indexDirty++;
+    this.dirty = true;
+    this.indexDirty = true;
+    this._glDatas = [];
+  }
+
+  setState(newState) {
+
+    const { states } = AwesomeText;
+
+    if (!newState in Object.values(states)) return;
+
+    switch (newState) {
+      case states.regular:
+        this.setRegularState();
+        break;
+      case states.editable:
+        if (this.state === AwesomeText.states.regular) {
+          this.setEditableState();
+        }
+        break;
+    }
+
+    this.state = newState;
+    console.log("new state: " + this.state);
+  }
+
+  setRange(start = null, end = null) {
+    if (start === null) start = this.select.range[0];
+    if (end === null) end = this.select.range[1];
+
+    this.select.range = [start, end];
+
+    this.select.update();
   }
 
   get text() {
@@ -57,6 +100,72 @@ class AwesomeText extends PIXI.mesh.Mesh {
   set text(value) {
     this._text = value;
     this.update();
+  }
+
+  setRegularState() {
+
+    AwesomeText.currentEditingElement = null;
+
+    this.off("mousedown");
+    this.off("mousemove");
+    this.off("mouseup");
+    this.off("mouseupoutside");
+
+    this.on("click", e => {
+      if (this.clicksCount === 1) {
+        this.clicksCount = 0;
+        this.setState(AwesomeText.states.editable);
+      }
+
+      if (this.clicksCount === 0) {
+        this.clicksCount++;
+        window.setTimeout(() => {
+          this.clicksCount = 0;
+        }, 300)
+      }
+    })
+
+  }
+
+  setEditableState() {
+
+    if (AwesomeText.currentEditingElement != null) {
+      AwesomeText.currentEditingElement.setState(AwesomeText.states.regular);
+    }
+
+    AwesomeText.currentEditingElement = this;
+    this.setRange(0,0);
+
+    this.off("click");
+
+    this.on("mousedown", e => {
+      this.setState(AwesomeText.states.selecting);
+
+      let position = e.data.global;
+
+      const closestLetter = text.select.getClosestGlyph(position.x + 12, position.y + text.layout.lineHeight / 2);
+      const index = text.layout.glyphs.indexOf(closestLetter);
+
+      text.setRange(index, index);
+    });
+
+    this.on("mousemove", e => {
+      if (this.state === AwesomeText.states.selecting) {
+        let position = e.data.global;
+        const closestLetter = text.select.getClosestGlyph(position.x, position.y + text.layout.lineHeight / 2);
+        const index = text.layout.glyphs.indexOf(closestLetter);
+        text.setRange(null, index);
+      }
+    });
+
+    this.on("mouseup", e => {
+      this.setState(AwesomeText.states.editable);
+    });
+
+    this.on("mouseupoutside", e => {
+      this.setState(AwesomeText.states.editable);
+    });
+
   }
 
   get texture() {
@@ -71,7 +180,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
     let prev_char = " ";  // Used to calculate kerning
     let cpos      = pos;  // Current pen position
     let x_max     = 0.0;  // Max width - used for bounding box
-    let scale     = font_metrics.cap_scale;
+    let scale     = font_metrics.capScale;
 
     let str_pos = 0;
 
@@ -84,16 +193,16 @@ class AwesomeText extends PIXI.mesh.Mesh {
       if ( schar === "\n" ) {
         if ( cpos[0] > x_max ) x_max = cpos[0]; // Expanding the bounding rect
         cpos[0]  = pos[0];
-        cpos[1] -= font_metrics.line_height;
+        cpos[1] -= font_metrics.lineHeight;
         prev_char = " ";
         continue;
       }
 
       if ( schar === " " ) {
         //schar = "_"
-        cpos[0] += font.space_advance * scale;
-        prev_char = " ";
-        continue;
+        //cpos[0] += font.space_advance * scale;
+        //prev_char = " ";
+        //continue;
       }
 
       var font_char = font.chars[ schar ];
@@ -117,33 +226,32 @@ class AwesomeText extends PIXI.mesh.Mesh {
     }
 
     return {
-      rect : [ pos[0], pos[1], x_max - pos[0], pos[1] - cpos[1] + font_metrics.line_height ],
+      rect : [ pos[0], pos[1], x_max - pos[0], pos[1] - cpos[1] + font_metrics.lineHeight ],
       string_pos : str_pos,
       //array_pos : array_pos
     }
 
   }
 
-  fontMetrics( font, pixel_size, more_line_gap = 0.0 ) {
-    // We use separate scale for the low case characters
-    // so that x-height fits the pixel grid.
-    // Other characters use cap-height to fit to the pixels
-    var cap_scale   = pixel_size / font.cap_height;
-    var low_scale   = Math.round( font.x_height * cap_scale ) / font.x_height;
+  fontMetrics(fontSize, moreLineGap = 0.2) {
 
-    // Ascent should be a whole number since it's used to calculate the baseline
-    // position which should lie at the pixel boundary
-    var ascent      = Math.round( font.ascent * cap_scale );
+    const {cap_height, x_height, ascent: fontAscent , descent, line_gap} = this.font;
 
-    // Same for the line height
-    var line_height = Math.round( cap_scale * ( font.ascent + font.descent + font.line_gap ) + more_line_gap );
+    const capScale = this.style.fontSize / cap_height;
+    const lowScale = Math.round( x_height * capScale ) / x_height;
+    const ascent = Math.round( fontAscent * capScale );
+    let lineHeight = Math.round( capScale * ( fontAscent + descent + line_gap ) + moreLineGap);
 
+    if (this.style.lineHeight > 0)
+      lineHeight = this.style.lineHeight;
+    else
+      this.style.lineHeight = lineHeight;
 
-    return { cap_scale   : cap_scale,
-      low_scale   : low_scale,
-      pixel_size  : pixel_size,
+    return {
+      capScale   : capScale,
+      lowScale   : lowScale,
       ascent      : ascent,
-      line_height : line_height
+      lineHeight : lineHeight
     };
   }
 
@@ -156,11 +264,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
     var baseline = pos[1] - font_metrics.ascent;
 
     // Low case chars use their own scale
-    var scale = lowcase ? font_metrics.low_scale : font_metrics.cap_scale;
-
-    //scale = font_metrics.low_scale;
-
-    //scale += 20;
+    var scale = lowcase ? font_metrics.lowScale : font_metrics.capScale;
 
     // Laying out the glyph rectangle
     var g      = font_char.rect;
@@ -206,12 +310,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
     //return { vertices : vertices, pos : [ new_pos_x, pos[1] ] };
   }
-
-
 }
 
-
-
-//module.exports = AwesomeText;
 
 export default AwesomeText;

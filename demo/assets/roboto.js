@@ -10,8 +10,17 @@ cap_height: 0.061615,
 x_height: 0.047000,
 space_advance: 0.021455,
 
-
 chars:{
+
+    "\u0020": {
+        codepoint: 33,
+        rect: [0.958007, 0.235351, 0.979462, 0.356445],
+        bearing_x: 0.006771,
+        bearing_y: 0.006771,
+        advance_x: 0.022301,
+        flags: 8,
+    },
+
     "\u0021": {
         codepoint: 33,
         rect: [0.000000, 0.000000, 0.028564, 0.121094],

@@ -68,7 +68,7 @@ const includeConfig = Object.assign({}, config,{
 
   plugins: [
     //new Visualizer(),
-    new uglifyJsPlugin({
+    /*new uglifyJsPlugin({
        minimize: true,
        sourceMap: false,
        output: {
@@ -77,7 +77,7 @@ const includeConfig = Object.assign({}, config,{
        compressor: {
            warnings: false
        }
-   })
+   })*/
   ]
 });
 

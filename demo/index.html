@@ -18,15 +18,7 @@
 </head>
 <body>
 <div style="position: absolute; top: 0; left: 0; padding-left: 20px; font-family: 'Helvetica Neue', Arial; pointer-events: none;">
-    <h1>Pixi-sdf-text</h1>
-    <h2>Signed distance fields text implementation for PixiJS</h2>
-    <p>Essentially <a href="https://www.mapbox.com/blog/text-signed-distance-fields/">SDF is the most efficient way to draw text in WebGL</a>. <br>
-        It uses <a href="./assets/OpenSans-Regular.png">special kind of raster atlases</a> and GLSL shader to <a href="http://wdobbie.com/pdf/">draw vector scalable text in a very performant way</a> on GPU.</p>
-    <p style="display: inline-block;">Ensure it scales well staying sharp even when rotating, </p>
-    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.fill = 0xffffff;">change text color</button>
-    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.align = 'right';">change text align</button>
-    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.style.fontSize = '80';">change text size</button>
-    <button style="pointer-events: all; display: inline-block;" id="size-button" onclick="window.text.text = 'Lorem ipsum dolor sit amet';">change text copy</button>
+
 </div>
 <script>
 
@@ -36,6 +28,16 @@
   var app = new PIXI.Application(800, 600, {
     transparent: true,
     antialias: true
+  });
+
+  app.renderer.plugins.interaction.on( 'mousedown', e => {
+
+    if (PIXI.extras.AwesomeText.currentEditingElement != null) {
+      if (e.currentTarget !== PIXI.extras.AwesomeText.currentEditingElement) {
+        PIXI.extras.AwesomeText.currentEditingElement.setState(PIXI.extras.AwesomeText.states.regular);
+      }
+    }
+
   });
 
   document.body.appendChild(app.view);
@@ -51,8 +53,8 @@
     font = roboto_font;
     tex = resources[fontData.image].texture;
 
-    window.text = new PIXI.extras.AwesomeText("Hello darkness my old friend, i've come to talk with you again with you again", {
-      fontSize: 16 * 0.7,
+    window.text = new PIXI.extras.AwesomeText("Hello darkness, my old friend I've come to talk with you again Because a vision softly creeping Left its seeds while I was sleeping", {
+      fontSize: 30 * 0.7,
       backgroundColor: '#9B5BD0',
       fill: '#ffffff',
       breakWords: true,
@@ -63,16 +65,17 @@
       texture: tex
     });
 
+    text.x = 0;
+    text.y = 0;
 
-    text.x = 50;
-    text.y = app.renderer.height / 2;
-
-    text.scale.y = 5;
-    text.scale.x = 5;
+    //text.scale.x = 2;
+    //text.scale.y = 2;
 
     text.update();
-
     app.stage.addChild(text);
+
+
+    //text.setState(PIXI.extras.AwesomeText.states.editable)
 
   });
 
