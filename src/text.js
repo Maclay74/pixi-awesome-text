@@ -1,17 +1,21 @@
 const createIndices = require("quad-indices")
 import TextLayout from './layout';
 import Select from './select'
+import Input from './input'
 
 class AwesomeText extends PIXI.mesh.Mesh {
 
   static scale = 1.0;
-  static states = {regular: 0, editable: 1, selecting: 2}
+  static states = {regular: 0, editable: 1, selecting: 2};
 
   static currentEditingElement = null;
 
   pluginName = 'AwesomeTextRenderer';
   state = AwesomeText.states.regular;
   clicksCount = 0;
+  inputElement = null;
+  input = null;
+  select = null;
 
   constructor(text, style, font) {
     super(font.texture);
@@ -25,13 +29,8 @@ class AwesomeText extends PIXI.mesh.Mesh {
     this.interactive = true;
     this.buttonMode = true;
 
-    this.setState(AwesomeText.states.regular);
-  }
-
-  update() {
-    this.metrics = this.fontMetrics(this.style.fontSize);
-
-    this.layout = new TextLayout(this.text, this.font, {
+    // Calcualte layout
+    this.layout = new TextLayout(this, {
       fontSize: this.style.fontSize,
       wrapWords: this.style.breakWords,
       wrapperWidth: this.style.wordWrapWidth,
@@ -39,18 +38,35 @@ class AwesomeText extends PIXI.mesh.Mesh {
       lineHeight: this.style.lineHeight,
     });
 
+    //  Select plugin
+    this.select = new Select(this);
+
+    // Input plugin
+    this.input = new Input(this);
+
+    this.setState(AwesomeText.states.regular);
+  }
+
+  update() {
+    this.metrics = this.fontMetrics(this.style.fontSize);
+
+
+    this.layout.update();
+    this.select.update();
+    this.input.update();
+
+    // Arrays for vertices, uvs and sdf
     this.vertices = new Float32Array(this.layout.lettersCount * 4 * 2);
     this.uvs = new Float32Array(this.layout.lettersCount * 4 * 2);
     this.sdfSizes = new Float32Array(this.layout.lettersCount * 4);
-
     this.arrayPositions = { vertex: 0, uvs: 0, sdf: 0 };
 
-    this.select = new Select(this.metrics, this.layout);
-
+    // Fill arrays word by word
     this.layout.wordsMetrics.forEach (word => {
       this.writeString(word.word, this.font, this.metrics, [word.x, word.y]);
     });
 
+    // Prepare indices
     this.indices = createIndices({
       clockwise: true,
       type: 'uint16',
@@ -81,16 +97,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
     }
 
     this.state = newState;
-    console.log("new state: " + this.state);
-  }
-
-  setRange(start = null, end = null) {
-    if (start === null) start = this.select.range[0];
-    if (end === null) end = this.select.range[1];
-
-    this.select.range = [start, end];
-
-    this.select.update();
   }
 
   get text() {
@@ -111,6 +117,9 @@ class AwesomeText extends PIXI.mesh.Mesh {
     this.off("mouseup");
     this.off("mouseupoutside");
 
+    this.input.enabled = false;
+
+
     this.on("click", e => {
       if (this.clicksCount === 1) {
         this.clicksCount = 0;
@@ -129,32 +138,31 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
   setEditableState() {
 
+    // Disable previously enabled field
     if (AwesomeText.currentEditingElement != null) {
       AwesomeText.currentEditingElement.setState(AwesomeText.states.regular);
     }
-
     AwesomeText.currentEditingElement = this;
-    this.setRange(0,0);
 
+    // Disable unnecessary events
     this.off("click");
+
+    this.input.enabled = true;
+
+    // Select all characters
+    this.select.setRange(0,this.text.length - 1);
 
     this.on("mousedown", e => {
       this.setState(AwesomeText.states.selecting);
-
-      let position = e.data.global;
-
-      const closestLetter = text.select.getClosestGlyph(position.x + 12, position.y + text.layout.lineHeight / 2);
-      const index = text.layout.glyphs.indexOf(closestLetter);
-
-      text.setRange(index, index);
+      this.select.onMouseDown(e);
+      this.input.show();
+      this.input.update(e);
     });
 
     this.on("mousemove", e => {
       if (this.state === AwesomeText.states.selecting) {
-        let position = e.data.global;
-        const closestLetter = text.select.getClosestGlyph(position.x, position.y + text.layout.lineHeight / 2);
-        const index = text.layout.glyphs.indexOf(closestLetter);
-        text.setRange(null, index);
+        this.select.onMouseMove(e);
+        this.input.hide();
       }
     });
 
@@ -166,6 +174,10 @@ class AwesomeText extends PIXI.mesh.Mesh {
       this.setState(AwesomeText.states.editable);
     });
 
+  }
+
+  insertString(index, string) {
+    this.text = this.text.substr(0, index) + string + this.text.substr(index);
   }
 
   get texture() {

@@ -16,18 +16,29 @@ class TextLayout {
   linesCount = 0;
   lineHeight = 0;
   glyphs = [];
+  owner = null;
 
 
-  constructor(text, font, config) {
-    this.text = text;
-    this.font = font;
+  constructor(owner, config) {
+
+    this.owner = owner;
+    this.text = owner.text;
+    this.font = owner.font;
     this.fontSize = config.fontSize;
     this.wrapWords = config.wrapWords;
     this.wrapperWidth = config.wrapperWidth;
     this.lineHeight = config.lineHeight;
     this.align = config.align;
+    this.update();
+
+  }
+
+  update() {
+    this.text = this.owner.text;
+    this.font = this.owner.font;
+
     this.lettersCount = this.text.split("").length;
-    this.metrics = this.fontMetrics(font, 0.0);
+    this.metrics = this.fontMetrics(this.font, 0.0);
     this.startY = this.metrics.lineHeight;
     this.calculateWordsPositions();
 
@@ -36,7 +47,6 @@ class TextLayout {
     this.wordsMetrics.forEach (word => {
       this.getGlyphs(word.word, [word.x, word.y]);
     });
-
   }
 
   fontMetrics(fontSize, moreLineGap = 0.2) {
@@ -137,8 +147,6 @@ class TextLayout {
     let x = this.startX;
     let y = this.startY;
 
-
-
     // Calculate words positions on lines
     words.forEach(word => {
       const wordSize = this.getStringSize(word);
@@ -146,6 +154,7 @@ class TextLayout {
         x = this.startX;
         y += wordSize.height;
       }
+
       this.wordsMetrics.push({...wordSize, x, y, word});
 
       //x += wordSize.width + this.font.space_advance * this.metrics.capScale;

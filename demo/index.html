@@ -25,7 +25,7 @@
 
   PIXI.settings.MIPMAP_TEXTURES = false;
 
-  var app = new PIXI.Application(800, 600, {
+  var app = new PIXI.Application(1800, 800, {
     transparent: true,
     antialias: true
   });
@@ -59,7 +59,7 @@
       fill: '#ffffff',
       breakWords: true,
       wordWrapWidth: 500,
-      align: 'center'
+      align: 'left'
     }, {
       font: font,
       texture: tex
@@ -71,7 +71,6 @@
     //text.scale.x = 2;
     //text.scale.y = 2;
 
-    text.update();
     app.stage.addChild(text);
 
 
