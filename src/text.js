@@ -50,7 +50,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
   update() {
     this.metrics = this.fontMetrics(this.style.fontSize);
 
-
     this.layout.update();
     this.select.update();
     this.input.update();
@@ -151,6 +150,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
     // Select all characters
     this.select.setRange(0,this.text.length - 1);
+    this.input.inputElement.focus();
 
     this.on("mousedown", e => {
       this.setState(AwesomeText.states.selecting);
@@ -168,16 +168,24 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
     this.on("mouseup", e => {
       this.setState(AwesomeText.states.editable);
+      this.select.onMouseUp(e);
     });
 
     this.on("mouseupoutside", e => {
       this.setState(AwesomeText.states.editable);
+      this.select.onMouseUp(e);
     });
 
   }
 
   insertString(index, string) {
     this.text = this.text.substr(0, index) + string + this.text.substr(index);
+  }
+
+  removeString(index, length) {
+    let newText = this.text.split("");
+    newText.splice(index, length + 1);
+    this.text = newText.join("");
   }
 
   get texture() {
