@@ -121,16 +121,20 @@ class Select {
     const selectingLine = Math.floor(y / this.metrics.lineHeight);
     const selectingLineY = selectingLine * lineHeight;
     let lastGlyphOnLine = glyphs[glyphs.length - 1];
+    let firstGlyphOnLine = null;
 
-    for (let i = 0; i < glyphs.length; ++i) {
+    for (let i = 0; i < glyphs.length ; ++i) {
 
       let glyph = glyphs[i];
 
       if (glyph.metrics.y === selectingLineY + lineHeight) {
+
         lastGlyphOnLine = glyph;
 
-        if (glyph.metrics.x + glyph.metrics.width > x) {
-         return glyphs[i - 1];
+        if (x < glyph.metrics.x + glyph.metrics.width / 2) {
+
+          if (i === 0) return -1;
+          return glyphs[i - 1];
         }
       }
     }
@@ -152,10 +156,10 @@ class Select {
     position.x = position.x /  this.owner.scale.x;
     position.y = position.y / this.owner.scale.y;
 
-    const closestLetter = this.getClosestGlyph(position.x + 12, position.y);
+    const closestLetter = this.getClosestGlyph(position.x , position.y);
     let index = this.owner.layout.glyphs.indexOf(closestLetter);
 
-    this.setRange(index , false );
+    this.setRange(index + 1, false );
   }
 
   onMouseMove(event) {
@@ -168,10 +172,10 @@ class Select {
     position.x = position.x / this.owner.scale.x;
     position.y = position.y / this.owner.scale.y;
 
-    const closestLetter = text.select.getClosestGlyph(position.x + 12 , position.y);
-    let index = text.layout.glyphs.indexOf(closestLetter);
+    const closestLetter = this.getClosestGlyph(position.x  , position.y);
+    let index = this.owner.layout.glyphs.indexOf(closestLetter);
 
-    this.setRange(null, index);
+    this.setRange(null, index + 1);
   }
 
   onMouseUp(event) {
@@ -181,15 +185,20 @@ class Select {
 
     let position = event.data.global;
 
-    //position.x -= this.owner.position.x;
-    //position.y -= this.owner.position.y;
+    position.x -= this.owner.position.x;
+    position.y -= this.owner.position.y;
 
     position.x = position.x / this.owner.scale.x;
     position.y = position.y / this.owner.scale.y;
 
-    const closestLetter = text.select.getClosestGlyph(position.x + 12 , position.y);
-    this.owner.input.glyphIndex = text.layout.glyphs.indexOf(closestLetter) + 1;
+    const closestLetter = this.getClosestGlyph(position.x , position.y);
 
+    // -1 means that we at the start of the line
+    if (closestLetter === -1) {
+      this.owner.input.glyphIndex = closestLetter;
+    } else {
+      this.owner.input.glyphIndex = this.owner.layout.glyphs.indexOf(closestLetter);
+    }
   }
 
 }

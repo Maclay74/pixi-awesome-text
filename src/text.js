@@ -147,6 +147,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
     this.off("click");
 
     this.input.enabled = true;
+    this.input.hide();
 
     // Select all characters
     this.select.setRange(0,this.text.length - 1);

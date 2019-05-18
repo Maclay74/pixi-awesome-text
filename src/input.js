@@ -5,13 +5,13 @@ class Input {
   _enabled = false;
   owner = null;
 
-  _glyphIndex = null;
+  _glyphIndex = -1;
 
   set glyphIndex(value) {
     this._glyphIndex = value;
 
-    if (this._glyphIndex < 0)
-      this._glyphIndex = 0;
+    if (this._glyphIndex < -1)
+      this._glyphIndex = -1;
 
     if (this._glyphIndex > this.owner.layout.glyphs.length)
       this._glyphIndex = this.owner.layout.glyphs.length;
@@ -68,18 +68,19 @@ class Input {
     this.inputElement.style.backgroundColor = 'transparent';
     //this.inputElement.style.backgroundColor = 'rgba(0,0,0,0.3)';
 
+    const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
 
-
+    this.inputElement.style.color = 'transparent';
     this.inputElement.style.border = "none";
     this.inputElement.style.position = 'fixed';
-    this.inputElement.style.contain = 'srtict';
+    this.inputElement.style.contain = 'strict';
     this.inputElement.style.zIndex = 2;
     this.inputElement.style.pointerEvents = "none";
     this.inputElement.style.outline = "none";
     this.inputElement.style.color = this.owner.style.fill;
-    this.inputElement.style.marginLeft = "0px";
-    this.inputElement.style.transformOrigin= "bottom left";
-
+    this.inputElement.style.transformOrigin= "left top";
+    this.inputElement.style.transform = `matrix(${transform.join(", ")})`;
+    this.inputElement.style.padding = "0";
 
     this.addEvent("blur", (event) => this.inputElement.focus());
     this.addEvent("input", (event) => this.onInput(event));
@@ -93,29 +94,47 @@ class Input {
 
     const {glyphs} = this.owner.layout;
 
+    if (this.glyphIndex >= glyphs.length) {
+      this.glyphIndex = glyphs.length - 1;
+    }
+
     // Default caret place - start of the input field TODO implement align
-    let glyphMetrics = {x: 0, y: this.metrics.lineHeight};
+    let glyphMetrics = {
+      x: this.owner.position.x,
+      y: this.owner.position.y
+    };
 
     // if string is empty, put caret at the beginning
-    if (this.owner.layout.glyphs.length === 0) {
-      console.log("emply line");
-
+    if (this.owner.layout.glyphs.length === -1) {
 
       // if we on the last glyph, place caret after it
     }else if (this.glyphIndex === glyphs.length) {
+
       const lastGlyph = glyphs[glyphs.length - 1];
-      glyphMetrics.x = lastGlyph.metrics.x + lastGlyph.metrics.width;
-      glyphMetrics.y = lastGlyph.metrics.y;
+
+      glyphMetrics.x += lastGlyph.metrics.x + lastGlyph.metrics.width;
+      glyphMetrics.y += lastGlyph.metrics.y;
 
       // if caret in the middle of the text
-    } else if (this.glyphIndex !== null) {
+    } else if (this.glyphIndex !== -1) {
       const selectedGlyph = glyphs[this.glyphIndex];
-      glyphMetrics = {...selectedGlyph.metrics};
+
+      glyphMetrics.x += selectedGlyph.metrics.x + selectedGlyph.metrics.width;
+      glyphMetrics.y += selectedGlyph.metrics.y;
+    } else {
+      console.log("start of the text")
+
+      glyphMetrics.y += this.owner.style.lineHeight;
     }
+
+    const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
+    this.inputElement.style.transform = `matrix(${transform.join(", ")})`;
+    this.inputElement.style.height = this.metrics.lineHeight + "px";
+    this.inputElement.style.fontSize = this.metrics.lineHeight + "px";
 
     this.setPosition(glyphMetrics.x , glyphMetrics.y);
 
-    this.setScale(this.owner.scale.x, this.owner.scale.y);
+    //this.setScale(this.owner.scale.x, this.owner.scale.y);
     this.inputElement.focus();
   }
 
@@ -125,7 +144,7 @@ class Input {
 
     // If user selected some text, remove it
     if (range[0] !== range[1] && range[1] !== null) {
-      this.glyphIndex = Math.min(range[0], range[1]);
+      this.glyphIndex = Math.min(range[0] - 1, range[1] - 1);
       const removeIndex = Math.min.apply(null, range);
       const removeLength = Math.abs(range[0] - range[1]);
       this.owner.select.setRange(0,false);
@@ -136,6 +155,8 @@ class Input {
     }
 
     event.target.value = "";
+
+    if (event.data === null) return;
 
     // If text is empty now
     if (this.owner.layout.glyphs.length === 0) {
@@ -149,8 +170,8 @@ class Input {
 
     // If we in the middle of the line
     } else {
-      this.owner.insertString(this.glyphIndex, event.data);
-      this.glyphIndex++;
+      this.owner.insertString(++this.glyphIndex, event.data);
+      //this.glyphIndex++;
     }
     this.owner.select.setRange(0, false);
 
@@ -158,26 +179,24 @@ class Input {
 
   onKeydown(event) {
 
+
     switch (event.key) {
       case "ArrowLeft":
-
         this.owner.select.setRange(0, false);
         this.show();
         this.glyphIndex--;
         break;
 
       case "ArrowRight":
-
         this.owner.select.setRange(0, false);
         this.show();
         this.glyphIndex++;
 
         break;
+
       case "Backspace":
-
+      case "Delete":
         const {range} = this.owner.select;
-
-
         if (range[1] !== null) {
           this.glyphIndex = Math.min(range[0], range[1]);
           const removeIndex = Math.min.apply(null, range);
@@ -187,48 +206,40 @@ class Input {
           this.show();
         }
         else {
-          this.owner.removeString(--this.glyphIndex , 0);
+          if (event.key === "Backspace")
+            this.owner.removeString(this.glyphIndex--, 0);
         }
 
-        //this.glyphIndex--;
+        break;
+
+      // Select all
+      case "a":
+        if (event.ctrlKey) {
+          this.owner.select.setRange(0,this.owner.text.length - 1);
+        }
     }
 
-    let newPosition = null;
+    this.inputElement.value = " ";
+    this.inputElement.value = "";
 
-    const inputEvent = new Event("selectionchange");
-
-    console.log(this.inputElement.dispatchEvent(inputEvent));
-    //console.log(event.key);
   }
 
   setPosition(x, y) {
+    let lineHeight = this.metrics.lineHeight * this.owner.scale.y;
 
-    console.log(this.owner.scale);
-
-    x *= this.owner.scale.x;
     y *= this.owner.scale.y;
+    x *= this.owner.scale.x;
 
-    let top = y - this.metrics.lineHeight;
-    let offset = this.metrics.lineHeight  - this.metrics.ascent;
+    y -= lineHeight;
 
-    top += offset;
+    y -= this.owner.position.y * this.owner.scale.y;
+    x -= this.owner.position.x * this.owner.scale.x;
 
     this.inputElement.style.left = `${x}px`;
-    this.inputElement.style.top = `${top}px`;
-  }
+    this.inputElement.style.top = `${y}px`;
 
-  setScale(x, y) {
-    const offset = (this.metrics.lineHeight - this.metrics.ascent);
-
-    let top = y - this.metrics.lineHeight;
-    let lineHeight = this.metrics.lineHeight ;
-    //top += offset;
-
-
-    this.inputElement.style.height = lineHeight + "px"
-
-    this.inputElement.style.transform = `scale(${x})`;
-    this.inputElement.style.fontSize = (this.metrics.lineHeight * y) + "px"
+    this.inputElement.value = " ";
+    this.inputElement.value = "";
   }
 
   addEvent(event, callback) {
