@@ -47,10 +47,14 @@ class Input {
 
   enable() {
     this.inputElement.style.display = 'block';
+    document.body.append(this.inputElement);
   }
 
   disable() {
     this.inputElement.style.display = 'none';
+
+    if (document.body.contains(this.inputElement))
+      document.body.removeChild(this.inputElement);
   }
 
   hide() {
@@ -63,12 +67,13 @@ class Input {
 
   createField() {
     this.inputElement = document.createElement("input");
-    document.body.append(this.inputElement);
+
+
+
+    const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
 
     this.inputElement.style.backgroundColor = 'transparent';
     //this.inputElement.style.backgroundColor = 'rgba(0,0,0,0.3)';
-
-    const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
 
     this.inputElement.style.color = 'transparent';
     this.inputElement.style.border = "none";
@@ -122,7 +127,6 @@ class Input {
       glyphMetrics.x += selectedGlyph.metrics.x + selectedGlyph.metrics.width;
       glyphMetrics.y += selectedGlyph.metrics.y;
     } else {
-      console.log("start of the text")
 
       glyphMetrics.y += this.owner.style.lineHeight;
     }
@@ -150,8 +154,6 @@ class Input {
       this.owner.select.setRange(0,false);
       this.owner.removeString(removeIndex, removeLength);
       this.show();
-    } else {
-      //this.glyphIndex++;
     }
 
     event.target.value = "";
