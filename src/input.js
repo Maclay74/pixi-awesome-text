@@ -48,10 +48,14 @@ class Input {
 
   enable() {
     this.inputElement.style.display = 'block';
+    document.body.append(this.inputElement);
   }
 
   disable() {
     this.inputElement.style.display = 'none';
+
+    if (document.body.contains(this.inputElement))
+      document.body.removeChild(this.inputElement);
   }
 
   hide() {
@@ -64,12 +68,13 @@ class Input {
 
   createField() {
     this.inputElement = document.createElement("input");
-    document.body.append(this.inputElement);
+
+
+
+    const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
 
     this.inputElement.style.backgroundColor = 'transparent';
     //this.inputElement.style.backgroundColor = 'rgba(0,0,0,0.3)';
-
-    const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
 
     this.inputElement.style.color = 'transparent';
     this.inputElement.style.border = "none";
@@ -123,19 +128,18 @@ class Input {
       glyphMetrics.x += selectedGlyph.metrics.x + selectedGlyph.metrics.width;
       glyphMetrics.y += selectedGlyph.metrics.y;
     } else {
-      console.log("start of the text")
 
       glyphMetrics.y += this.owner.style.lineHeight;
     }
 
     const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
+
+
     this.inputElement.style.transform = `matrix(${transform.join(", ")})`;
     this.inputElement.style.height = this.metrics.lineHeight + "px";
     this.inputElement.style.fontSize = this.metrics.lineHeight + "px";
 
     this.setPosition(glyphMetrics.x , glyphMetrics.y);
-
-    //this.setScale(this.owner.scale.x, this.owner.scale.y);
     this.inputElement.focus();
   }
 
@@ -151,8 +155,6 @@ class Input {
       this.owner.select.setRange(0,false);
       this.owner.removeString(removeIndex, removeLength);
       this.show();
-    } else {
-      //this.glyphIndex++;
     }
 
     event.target.value = "";
@@ -226,26 +228,34 @@ class Input {
   }
 
   setPosition(x, y) {
-    let lineHeight = this.metrics.lineHeight * this.owner.scale.y;
 
-    let canvasRect = this.canvas.getBoundingClientRect();
+    const {a : scaleX, d: scaleY} = this.owner.transform.worldTransform;
+    const {x : localX, y: localY } = this.owner.position;
 
-    y *= this.owner.scale.y;
-    x *= this.owner.scale.x;
+    let lineHeight = this.metrics.lineHeight * scaleY;
+
+    y *= scaleY;
+    x *= scaleX;
 
     y -= lineHeight;
 
-    y -= this.owner.position.y * this.owner.scale.y;
-    x -= this.owner.position.x * this.owner.scale.x;
-
-    y += canvasRect.y;
-    x += canvasRect.x;
+    y -= localY * scaleY;
+    x -= localX * scaleX;
 
     this.inputElement.style.left = `${x}px`;
     this.inputElement.style.top = `${y}px`;
 
     this.inputElement.value = " ";
     this.inputElement.value = "";
+
+    const transform = Object.values(this.getTransform()).slice(0, 6);
+    this.inputElement.style.transform = `matrix(${transform.join(", ")})`;
+  }
+
+  getTransform() {
+    const ownerTransform = this.owner.transform.worldTransform;
+    let canvasRect = this.canvas.getBoundingClientRect();
+    return {...ownerTransform, tx: ownerTransform.tx + canvasRect.x, ty: ownerTransform.ty + canvasRect.y};
   }
 
   addEvent(event, callback) {

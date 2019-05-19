@@ -56,6 +56,7 @@ class Select {
 
   buildVertices() {
 
+    this.metrics = this.owner.layout.metrics;
     // Select range
     let start = this.layout.glyphs[Math.min.apply(null,this.range)];
     let end = this.layout.glyphs[Math.max.apply(null,this.range)];
@@ -66,7 +67,6 @@ class Select {
       let letterCount = 0; // letters passed
       let firstLetter = null; // first letter on this line
       let lastLetter = null; // last letter on this line
-
 
 
       if (i * this.metrics.lineHeight + this.metrics.lineHeight < start.position[1]) continue;
@@ -83,11 +83,11 @@ class Select {
         letterCount += word.word.length;
       });
 
+
+
       // Bounds letters for current line
       let startLineLetter = this.layout.glyphs[firstLetter];
       let endLineLetter = this.layout.glyphs[lastLetter];
-
-
 
       // If the start or end range is on this line, change bounds for them
       if (start.position[1] ===  startLineLetter.position[1]) startLineLetter = start;
