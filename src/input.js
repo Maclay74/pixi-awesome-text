@@ -40,6 +40,7 @@ class Input {
     this.owner = owner;
     this.metrics = owner.metrics;
     this.layout = owner.layout;
+    this.canvas = document.getElementsByTagName("canvas")[0]
 
     this.createField();
     this.disable();
@@ -227,6 +228,8 @@ class Input {
   setPosition(x, y) {
     let lineHeight = this.metrics.lineHeight * this.owner.scale.y;
 
+    let canvasRect = this.canvas.getBoundingClientRect();
+
     y *= this.owner.scale.y;
     x *= this.owner.scale.x;
 
@@ -234,6 +237,9 @@ class Input {
 
     y -= this.owner.position.y * this.owner.scale.y;
     x -= this.owner.position.x * this.owner.scale.x;
+
+    y += canvasRect.y;
+    x += canvasRect.x;
 
     this.inputElement.style.left = `${x}px`;
     this.inputElement.style.top = `${y}px`;
