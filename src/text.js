@@ -7,17 +7,13 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
   static scale = 1.0;
   static states = {regular: 0, editable: 1, selecting: 2};
-
   static currentEditingElement = null;
 
   pluginName = 'AwesomeTextRenderer';
   state = AwesomeText.states.regular;
   clicksCount = 0;
-  inputElement = null;
-  input = null;
-  select = null;
 
-  constructor(text, style, font) {
+  constructor(text, style, font, editable = false) {
     super(font.texture);
 
     this.style = new PIXI.TextStyle(style);
@@ -25,9 +21,8 @@ class AwesomeText extends PIXI.mesh.Mesh {
     this._text = text;
     this._font = font.font;
     this._texture = font.texture;
+    this.editable = editable;
 
-    this.interactive = true;
-    this.buttonMode = true;
 
     // Calcualte layout
     this.layout = new TextLayout(this, {
@@ -38,21 +33,27 @@ class AwesomeText extends PIXI.mesh.Mesh {
       lineHeight: this.style.lineHeight,
     });
 
-    //  Select plugin
-    this.select = new Select(this);
+    if (this.editable) {
+      this.interactive = true;
+      this.buttonMode = true;
 
-    // Input plugin
-    this.input = new Input(this);
+      this.select = new Select(this);
+      this.input = new Input(this);
+      this.setState(AwesomeText.states.regular);
+    }
 
-    this.setState(AwesomeText.states.regular);
+
   }
 
   update() {
     this.metrics = this.fontMetrics(this.style.fontSize);
 
     this.layout.update();
-    this.select.update();
-    this.input.update();
+
+    if (this.editable) {
+      this.select.update();
+      this.input.update();
+    }
 
     // Arrays for vertices, uvs and sdf
     this.vertices = new Float32Array(this.layout.lettersCount * 4 * 2);
@@ -79,6 +80,10 @@ class AwesomeText extends PIXI.mesh.Mesh {
   }
 
   setState(newState) {
+
+    if (!this.editable) {
+      return;
+    }
 
     const { states } = AwesomeText;
 
@@ -117,7 +122,6 @@ class AwesomeText extends PIXI.mesh.Mesh {
     this.off("mouseupoutside");
 
     this.input.enabled = false;
-
 
     this.on("click", e => {
       if (this.clicksCount === 1) {
