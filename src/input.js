@@ -8,6 +8,7 @@ class Input {
   _glyphIndex = -1;
 
   set glyphIndex(value) {
+
     this._glyphIndex = value;
 
     if (this._glyphIndex < -1)
@@ -69,8 +70,6 @@ class Input {
   createField() {
     this.inputElement = document.createElement("input");
 
-
-
     const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
 
     this.inputElement.style.backgroundColor = 'transparent';
@@ -91,6 +90,7 @@ class Input {
     this.addEvent("blur", (event) => this.inputElement.focus());
     this.addEvent("input", (event) => this.onInput(event));
     this.addEvent("keydown", (event) => this.onKeydown(event))
+    this.addEvent("paste", (event) => this.pasteFromClipboard(event))
   }
 
   update() {
@@ -147,33 +147,36 @@ class Input {
 
     const { range } = this.owner.select;
 
-    // If user selected some text, remove it
-    if (range[0] !== range[1] && range[1] !== null) {
-      this.glyphIndex = Math.min(range[0] - 1, range[1] - 1);
-      const removeIndex = Math.min.apply(null, range);
-      const removeLength = Math.abs(range[0] - range[1]);
-      this.owner.select.setRange(0,false);
-      this.owner.removeString(removeIndex, removeLength);
-      this.show();
-    }
+    this.owner.select.clearSelectedRange();
 
     event.target.value = "";
 
     if (event.data === null) return;
 
+    // Content we are about to add
+    let textToAdd = event.data;
+
+    if (this.owner.uppercase) {
+      textToAdd = textToAdd.toUpperCase();
+    }
+
+    if (this.owner.lowercase) {
+      textToAdd = textToAdd.toLowerCase();
+    }
+
     // If text is empty now
     if (this.owner.layout.glyphs.length === 0) {
-      this.owner.text = event.data;
+      this.owner.text = textToAdd;
       this.glyphIndex = 1;
 
     // If caret is at the end of the text
     } else if (this.glyphIndex === this.owner.layout.glyphs.length - 1) {
-      this.owner.text += event.data;
+      this.owner.text += textToAdd;
       this.glyphIndex++;
 
     // If we in the middle of the line
     } else {
-      this.owner.insertString(++this.glyphIndex, event.data);
+      this.owner.insertString(++this.glyphIndex, textToAdd);
       //this.glyphIndex++;
     }
     this.owner.select.setRange(0, false);
@@ -181,6 +184,8 @@ class Input {
   }
 
   onKeydown(event) {
+
+    const {range} = this.owner.select;
 
 
     switch (event.key) {
@@ -198,19 +203,18 @@ class Input {
         break;
 
       case "Backspace":
-      case "Delete":
-        const {range} = this.owner.select;
         if (range[1] !== null) {
-          this.glyphIndex = Math.min(range[0], range[1]);
-          const removeIndex = Math.min.apply(null, range);
-          const removeLength = Math.abs(range[0] - range[1]);
-          this.owner.select.setRange(0,false);
-          this.owner.removeString(removeIndex, removeLength);
-          this.show();
-        }
-        else {
-          if (event.key === "Backspace")
+          this.owner.select.clearSelectedRange();
+        } else {
             this.owner.removeString(this.glyphIndex--, 0);
+        }
+        break;
+
+      case "Delete":
+        if (range[1] !== null) {
+          this.owner.select.clearSelectedRange();
+        } else {
+            this.owner.removeString(this.glyphIndex + 1, 0);
         }
 
         break;
@@ -220,6 +224,14 @@ class Input {
         if (event.ctrlKey) {
           this.owner.select.setRange(0,this.owner.text.length - 1);
         }
+
+        break;
+      case "c":
+        if (event.ctrlKey) {
+          this.copyToClipboard();
+        }
+
+        break;
     }
 
     this.inputElement.value = " ";
@@ -264,6 +276,27 @@ class Input {
         callback(event);
       }
     });
+  }
+
+  copyToClipboard() {
+    const range = this.owner.select.range;
+    const start = Math.min.apply(null, range);
+    const end = Math.max.apply(null, range);
+
+    this.inputElement.value = this.owner.text.slice(start, end + 1);
+    this.inputElement.select();
+    document.execCommand("copy");
+    this.inputElement.value = "";
+  }
+
+  pasteFromClipboard(event) {
+    event.preventDefault();
+    const text = event.clipboardData.getData("text")
+    this.owner.select.clearSelectedRange();
+
+    this.owner.insertString(this.glyphIndex + 1, text);
+
+    this.glyphIndex = this.glyphIndex + text.length;
   }
 
 }

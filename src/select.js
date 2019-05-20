@@ -114,6 +114,8 @@ class Select {
   }
 
   getClosestGlyph(x, y) {
+    this.metrics = this.owner.metrics;
+    this.layout = this.owner.layout;
 
     const { glyphs } = this.owner.layout;
 
@@ -128,12 +130,10 @@ class Select {
       let glyph = glyphs[i];
 
       if (glyph.metrics.y === selectingLineY + lineHeight) {
-
         lastGlyphOnLine = glyph;
-
         if (x < glyph.metrics.x + glyph.metrics.width / 2) {
-
           if (i === 0) return -1;
+
           return glyphs[i - 1];
         }
       }
@@ -157,6 +157,9 @@ class Select {
     position.y = position.y / this.owner.scale.y;
 
     const closestLetter = this.getClosestGlyph(position.x , position.y);
+
+    console.log(closestLetter);
+
     let index = this.owner.layout.glyphs.indexOf(closestLetter);
 
     this.setRange(index + 1, false );
@@ -193,11 +196,28 @@ class Select {
 
     const closestLetter = this.getClosestGlyph(position.x , position.y);
 
+
+
     // -1 means that we at the start of the line
     if (closestLetter === -1) {
       this.owner.input.glyphIndex = closestLetter;
     } else {
       this.owner.input.glyphIndex = this.owner.layout.glyphs.indexOf(closestLetter);
+    }
+  }
+
+  clearSelectedRange() {
+
+    const range = this.range;
+
+    // If user selected some text, remove it
+    if (range[0] !== range[1] && range[1] !== null) {
+      this.owner.input.glyphIndex = Math.min(range[0] - 1, range[1] - 1);
+      const removeIndex = Math.min.apply(null, range);
+      const removeLength = Math.abs(range[0] - range[1]);
+      this.owner.select.setRange(0,false);
+      this.owner.removeString(removeIndex, removeLength);
+      this.owner.input.show();
     }
   }
 
