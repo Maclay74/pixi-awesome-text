@@ -64,14 +64,14 @@
       uppercase: true,
     }, {
       font: font,
-      texture: tex
-    }, true);
+      texture: tex,
+      uppercase: true,
+      editable: true,
+      antialiasing: false
+    });
 
     text.x = 100;
     text.y = 100;
-
-    //text.scale.x = 2;
-    //text.scale.y = 2;
 
     app.stage.addChild(text);
 

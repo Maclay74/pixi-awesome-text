@@ -60,9 +60,9 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
     glData.shader.uniforms.uSampler = this.renderer.bindTexture(source.texture);
     glData.shader.uniforms.translationMatrix = source.worldTransform.toArray(true);
 
-    glData.shader.uniforms.hint_amount = 1.0;
+    glData.shader.uniforms.hint_amount = source.config.antialiasing * 1;
     glData.shader.uniforms.sdfMultiplier = AwesomeText.scale;
-    glData.shader.uniforms.subpixel_amount = 1.0;
+    glData.shader.uniforms.subpixel_amount = source.config.antialiasing * 1;
     glData.shader.uniforms.font_color = PIXI.utils.hex2rgb(source.style.fill.replace("#", "0x"));
     glData.shader.uniforms.bg_color = PIXI.utils.hex2rgb(source.backgroundColor.replace("#", "0x"));
 

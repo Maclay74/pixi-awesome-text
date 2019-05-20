@@ -13,20 +13,24 @@ class AwesomeText extends PIXI.mesh.Mesh {
   state = AwesomeText.states.regular;
   clicksCount = 0;
 
+  config = {
+    editable: false,
+    uppercase: false,
+    lowercase: false,
+    antialiasing: true
+  };
 
-  constructor(text, style, font, editable = false) {
-    super(font.texture);
+  constructor(text, style, config) {
+    super(config.texture);
 
     this.style = new PIXI.TextStyle(style);
     this.backgroundColor = style.backgroundColor;
     this._text = text; // Content
-    this._font = font.font; // Font information
-    this._texture = font.texture; // Texture with glyphs
-    this.editable = editable; // Is this field editable
-    this.uppercase = style.uppercase;
-    this.lowercase = style.lowercase;
+    this._font = config.font; // Font information
+    this._texture = config.texture; // Texture with glyphs
+    this.config = {...this.config, ...config};
 
-    // Calcualte layout
+    // Calculate layout
     this.layout = new TextLayout(this, {
       fontSize: this.style.fontSize,
       wrapWords: this.style.breakWords,
@@ -35,7 +39,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
       lineHeight: this.style.lineHeight,
     });
 
-    if (this.editable) {
+    if (this.config.editable) {
       this.interactive = true;
       this.buttonMode = true;
 
@@ -50,7 +54,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
     this.layout.update();
 
-    if (this.editable) {
+    if (this.config.editable) {
       this.select.update();
       this.input.update();
     }
@@ -81,7 +85,7 @@ class AwesomeText extends PIXI.mesh.Mesh {
 
   setState(newState) {
 
-    if (!this.editable) {
+    if (!this.config.editable) {
       return;
     }
 

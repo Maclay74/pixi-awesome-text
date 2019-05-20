@@ -156,11 +156,11 @@ class Input {
     // Content we are about to add
     let textToAdd = event.data;
 
-    if (this.owner.uppercase) {
+    if (this.owner.config.uppercase) {
       textToAdd = textToAdd.toUpperCase();
     }
 
-    if (this.owner.lowercase) {
+    if (this.owner.config.lowercase) {
       textToAdd = textToAdd.toLowerCase();
     }
 
@@ -291,7 +291,16 @@ class Input {
 
   pasteFromClipboard(event) {
     event.preventDefault();
-    const text = event.clipboardData.getData("text")
+    let text = event.clipboardData.getData("text");
+
+    if (this.owner.config.uppercase)
+      text = text.toUpperCase();
+
+    if (this.owner.config.lowercase)
+      text = text.toLowerCase();
+
+    // TODO remove all trash symbols
+
     this.owner.select.clearSelectedRange();
 
     this.owner.insertString(this.glyphIndex + 1, text);
