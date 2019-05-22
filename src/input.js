@@ -399,7 +399,7 @@ class Input {
 
     this.owner.select.setRange(null, false)
 
-    const glyph = this.layout.glyphs[this.glyphIndex];
+    const glyph = this.layout.glyphs[Math.max(0, this.glyphIndex)];
 
     // If we are on the first line
     if (glyph.position[1] === this.layout.height) {
