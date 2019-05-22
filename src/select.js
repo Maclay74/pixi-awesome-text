@@ -211,7 +211,7 @@ class Select {
     const range = this.range;
 
     // If user selected some text, remove it
-    if (range[0] !== range[1] && range[1] !== null) {
+    if (range[1] !== null) {
       this.owner.input.glyphIndex = Math.min(range[0] - 1, range[1] - 1);
       const removeIndex = Math.min.apply(null, range);
       const removeLength = Math.abs(range[0] - range[1]);
@@ -219,6 +219,14 @@ class Select {
       this.owner.removeString(removeIndex, removeLength);
       this.owner.input.show();
     }
+  }
+
+  expand(direction) {
+    this.range[1] += direction;
+    this.update();
+
+    console.log(this.range);
+
   }
 
 }

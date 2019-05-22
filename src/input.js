@@ -190,15 +190,68 @@ class Input {
 
     switch (event.key) {
       case "ArrowLeft":
-        this.owner.select.setRange(0, false);
-        this.show();
-        this.glyphIndex--;
+
+        // Move by word
+        if (event.ctrlKey) {
+
+          // Select
+        } else if (event.shiftKey) {
+
+          // If we only have cursor, no selection
+          if (range[1] === null) {
+            range[0] = this.glyphIndex;
+            range[1] = this.glyphIndex ;
+            --this.glyphIndex;
+
+            // If we have selected one glyph and we remove selection
+          } else if (range[1] === range[0] && this.glyphIndex === range[0]) {
+            range[1] = null;
+            --this.glyphIndex;
+
+            // Regular selecting
+          } else {
+            this.owner.select.expand(-1);
+            --this.glyphIndex
+          }
+
+          this.owner.select.update()
+
+          // Just move cursor
+        } else {
+          this.owner.select.setRange(0, false);
+          this.show();
+          this.glyphIndex--;
+        }
+
         break;
 
       case "ArrowRight":
-        this.owner.select.setRange(0, false);
-        this.show();
-        this.glyphIndex++;
+
+        // Move by word
+        if (event.ctrlKey) {
+
+        // Select
+        } else if (event.shiftKey) {
+          if (range[1] === null) {
+            ++this.glyphIndex;
+            range[0] = this.glyphIndex;
+            range[1] = this.glyphIndex ;
+          } else if (range[1] === range[0] && this.glyphIndex === range[0] - 1) {
+            range[1] = null;
+            this.glyphIndex++;
+          } else {
+            this.owner.select.expand(1);
+            this.glyphIndex++
+          }
+
+          this.owner.select.update()
+
+        // Just move index
+        } else {
+          this.owner.select.setRange(0, false);
+          this.show();
+          this.glyphIndex++;
+        }
 
         break;
 
@@ -226,12 +279,20 @@ class Input {
         }
 
         break;
+
+      // Copy to clipboard
       case "c":
         if (event.ctrlKey) {
           this.copyToClipboard();
         }
 
         break;
+
+      // Cut
+      case "x":
+        if (event.ctrlKey) {
+          this.copyToClipboard(true);
+        }
     }
 
     this.inputElement.value = " ";
@@ -278,7 +339,7 @@ class Input {
     });
   }
 
-  copyToClipboard() {
+  copyToClipboard(cut = false) {
     const range = this.owner.select.range;
     const start = Math.min.apply(null, range);
     const end = Math.max.apply(null, range);
@@ -287,6 +348,10 @@ class Input {
     this.inputElement.select();
     document.execCommand("copy");
     this.inputElement.value = "";
+
+    if (cut) {
+      this.owner.select.clearSelectedRange();
+    }
   }
 
   pasteFromClipboard(event) {
