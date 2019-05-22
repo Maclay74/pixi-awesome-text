@@ -187,24 +187,22 @@ class Input {
 
     const {range} = this.owner.select;
 
-
     switch (event.key) {
+      case "ArrowUp":
+        this.moveUp();
+        break;
+
+
+      case "ArrowDown":
+        this.moveDown();
+        break;
+
       case "ArrowLeft":
 
         // Move by word
         if (event.ctrlKey) {
 
-          const glyphs = this.layout.glyphs;
-
-          if (this.glyphIndex > 0) {
-            for (let i = this.glyphIndex - 2; i >= 0; i-- ) {
-              if (glyphs[i].letter === " " && glyphs[i + 1 ].letter !== " ") {
-                this.glyphIndex = i;
-                return;
-              }
-              if (i === 0 ) this.glyphIndex = -1;
-            }
-          }
+          this.moveByWordLeft()
 
           // Select
         } else if (event.shiftKey) {
@@ -224,19 +222,7 @@ class Input {
 
         // Move by word
         if (event.ctrlKey) {
-
-          const glyphs = this.layout.glyphs;
-
-          if (this.glyphIndex < glyphs.length) {
-            for (let i = this.glyphIndex + 1; i <= glyphs.length - 1; i++ ) {
-              if (glyphs[i].letter === " " && glyphs[i - 1 ].letter !== " ") {
-                this.glyphIndex = i;
-                return;
-              }
-              if (i === glyphs.length - 1) this.glyphIndex = glyphs.length -1;
-            }
-          }
-
+         this.moveByWordRight();
         // Select
         } else if (event.shiftKey) {
           this.moveWithSelectRight()
@@ -407,6 +393,66 @@ class Input {
     this.glyphIndex--;
 
     this.owner.select.update();
+  }
+
+  moveDown() {
+
+    this.owner.select.setRange(null, false)
+
+    const glyph = this.layout.glyphs[this.glyphIndex];
+
+    // If we are on the first line
+    if (glyph.position[1] === this.layout.height) {
+      return;
+    }
+
+    const newGlyph = this.owner.select.getClosestGlyph(glyph.position[0], glyph.position[1]);
+    this.glyphIndex = this.layout.glyphs.indexOf(newGlyph);
+  }
+
+  moveUp() {
+
+    this.owner.select.setRange(null, false)
+
+    const glyph = this.layout.glyphs[this.glyphIndex];
+
+    // If we are on the first line
+    if (glyph.position[1] <= this.metrics.lineHeight) {
+      return;
+    }
+
+    const newGlyph = this.owner.select.getClosestGlyph(glyph.position[0], glyph.position[1] - this.metrics.lineHeight * 2);
+    this.glyphIndex = this.layout.glyphs.indexOf(newGlyph);
+
+  }
+
+  moveByWordLeft() {
+    const glyphs = this.layout.glyphs;
+
+    if (this.glyphIndex > 0) {
+      for (let i = this.glyphIndex - 2; i >= 0; i-- ) {
+        if (glyphs[i].letter === " " && glyphs[i + 1 ].letter !== " ") {
+          this.glyphIndex = i;
+          return;
+        }
+        if (i === 0 ) this.glyphIndex = -1;
+      }
+    }
+  }
+
+  moveByWordRight() {
+    const glyphs = this.layout.glyphs;
+
+    if (this.glyphIndex < glyphs.length) {
+      for (let i = this.glyphIndex + 1; i <= glyphs.length - 1; i++ ) {
+        if (glyphs[i].letter === " " && glyphs[i - 1 ].letter !== " ") {
+          this.glyphIndex = i;
+          return;
+        }
+        if (i === glyphs.length - 1) this.glyphIndex = glyphs.length -1;
+      }
+    }
+
   }
 
 }
