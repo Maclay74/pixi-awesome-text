@@ -194,27 +194,22 @@ class Input {
         // Move by word
         if (event.ctrlKey) {
 
+          const glyphs = this.layout.glyphs;
+
+          if (this.glyphIndex > 0) {
+            for (let i = this.glyphIndex - 2; i >= 0; i-- ) {
+              if (glyphs[i].letter === " " && glyphs[i + 1 ].letter !== " ") {
+                this.glyphIndex = i;
+                return;
+              }
+              if (i === 0 ) this.glyphIndex = -1;
+            }
+          }
+
           // Select
         } else if (event.shiftKey) {
 
-          // If we only have cursor, no selection
-          if (range[1] === null) {
-            range[0] = this.glyphIndex;
-            range[1] = this.glyphIndex ;
-            --this.glyphIndex;
-
-            // If we have selected one glyph and we remove selection
-          } else if (range[1] === range[0] && this.glyphIndex === range[0]) {
-            range[1] = null;
-            --this.glyphIndex;
-
-            // Regular selecting
-          } else {
-            this.owner.select.expand(-1);
-            --this.glyphIndex
-          }
-
-          this.owner.select.update()
+          this.moveWithSelectLeft()
 
           // Just move cursor
         } else {
@@ -230,21 +225,21 @@ class Input {
         // Move by word
         if (event.ctrlKey) {
 
-        // Select
-        } else if (event.shiftKey) {
-          if (range[1] === null) {
-            ++this.glyphIndex;
-            range[0] = this.glyphIndex;
-            range[1] = this.glyphIndex ;
-          } else if (range[1] === range[0] && this.glyphIndex === range[0] - 1) {
-            range[1] = null;
-            this.glyphIndex++;
-          } else {
-            this.owner.select.expand(1);
-            this.glyphIndex++
+          const glyphs = this.layout.glyphs;
+
+          if (this.glyphIndex < glyphs.length) {
+            for (let i = this.glyphIndex + 1; i <= glyphs.length - 1; i++ ) {
+              if (glyphs[i].letter === " " && glyphs[i - 1 ].letter !== " ") {
+                this.glyphIndex = i;
+                return;
+              }
+              if (i === glyphs.length - 1) this.glyphIndex = glyphs.length -1;
+            }
           }
 
-          this.owner.select.update()
+        // Select
+        } else if (event.shiftKey) {
+          this.moveWithSelectRight()
 
         // Just move index
         } else {
@@ -371,6 +366,47 @@ class Input {
     this.owner.insertString(this.glyphIndex + 1, text);
 
     this.glyphIndex = this.glyphIndex + text.length;
+  }
+
+  moveWithSelectRight() {
+    const range = this.owner.select.range;
+
+    if (range[1] === null) {
+      ++this.glyphIndex;
+      range[0] = this.glyphIndex;
+      range[1] = this.glyphIndex ;
+    } else if (range[1] === range[0] && this.glyphIndex === range[0] - 1) {
+      range[1] = null;
+      this.glyphIndex++;
+    } else {
+      this.owner.select.expand(1);
+      this.glyphIndex++
+    }
+
+    this.owner.select.update()
+  }
+
+  moveWithSelectLeft() {
+
+    const range = this.owner.select.range;
+
+    // If we only have cursor, no selection
+    if (range[1] === null) {
+      range[0] = this.glyphIndex;
+      range[1] = this.glyphIndex ;
+
+      // If we have selected one glyph and we remove selection
+    } else if (range[1] === range[0] && this.glyphIndex === range[0]) {
+      range[1] = null;
+
+      // Regular selecting
+    } else {
+      this.owner.select.expand(-1);
+    }
+
+    this.glyphIndex--;
+
+    this.owner.select.update();
   }
 
 }
