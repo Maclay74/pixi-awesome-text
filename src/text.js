@@ -169,6 +169,9 @@ class AwesomeText extends PIXI.mesh.Mesh {
     });
 
     this.on("mousemove", e => {
+      const {movementX, movementY} = e.data.originalEvent;
+      if (movementX === 0 && movementY === 0) return;
+
       if (this.state === AwesomeText.states.selecting) {
         this.select.onMouseMove(e);
         this.input.hide();

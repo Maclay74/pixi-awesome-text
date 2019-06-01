@@ -144,21 +144,20 @@ class Select {
   }
 
   onMouseDown(event) {
-
     // Only left mouse button
     if (event.data.button !== 0) return;
 
     let position = event.data.global;
 
-    position.x -= this.owner.position.x;
-    position.y -= this.owner.position.y;
+    const ownerPosition = this.owner.getGlobalPosition();
+
+    position.x -= ownerPosition.x;
+    position.y -= ownerPosition.y;
 
     position.x = position.x /  this.owner.scale.x;
     position.y = position.y / this.owner.scale.y;
 
     const closestLetter = this.getClosestGlyph(position.x , position.y);
-
-    console.log(closestLetter);
 
     let index = this.owner.layout.glyphs.indexOf(closestLetter);
 
@@ -166,11 +165,12 @@ class Select {
   }
 
   onMouseMove(event) {
-
     let position = event.data.global;
 
-    position.x -= this.owner.position.x;
-    position.y -= this.owner.position.y;
+    const ownerPosition = this.owner.getGlobalPosition();
+
+    position.x -= ownerPosition.x;
+    position.y -= ownerPosition.y;
 
     position.x = position.x / this.owner.scale.x;
     position.y = position.y / this.owner.scale.y;
@@ -187,9 +187,10 @@ class Select {
     if (event.data.button !== 0) return;
 
     let position = event.data.global;
+    const ownerPosition = this.owner.getGlobalPosition();
 
-    position.x -= this.owner.position.x;
-    position.y -= this.owner.position.y;
+    position.x -= ownerPosition.x;
+    position.y -= ownerPosition.y;
 
     position.x = position.x / this.owner.scale.x;
     position.y = position.y / this.owner.scale.y;
@@ -224,9 +225,6 @@ class Select {
   expand(direction) {
     this.range[1] += direction;
     this.update();
-
-    console.log(this.range);
-
   }
 
 }

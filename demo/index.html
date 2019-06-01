@@ -73,7 +73,12 @@
     text.x = 100;
     text.y = 100;
 
-    app.stage.addChild(text);
+    let container = new PIXI.Container();
+    container.x = 100;
+    container.y = 100;
+
+    container.addChild(text);
+    app.stage.addChild(container);
 
   });
 
