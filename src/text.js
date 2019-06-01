@@ -17,18 +17,19 @@ class AwesomeText extends PIXI.mesh.Mesh {
     editable: false,
     uppercase: false,
     lowercase: false,
-    antialiasing: true
+    antialiasing: true,
+    backgroundColor: "#000000"
   };
 
   constructor(text, style, config) {
     super(config.texture);
 
     this.style = new PIXI.TextStyle(style);
-    this.backgroundColor = style.backgroundColor;
+    this.config = {...this.config, ...config};
+    this.backgroundColor = this.config.backgroundColor;
     this._text = text; // Content
     this._font = config.font; // Font information
     this._texture = config.texture; // Texture with glyphs
-    this.config = {...this.config, ...config};
 
     // Calculate layout
     this.layout = new TextLayout(this, {

@@ -55,8 +55,7 @@
     tex = resources[fontData.image].texture;
 
     window.text = new PIXI.extras.AwesomeText("Hello darkness, my old friend I've come to talk with you again Because a vision softly creeping Left its seeds while I was sleeping", {
-      fontSize: 22 * 0.7,
-      backgroundColor: '#9B5BD0',
+      fontSize: 13,
       fill: '#ffffff',
       breakWords: true,
       wordWrapWidth: 500,
@@ -67,7 +66,8 @@
       texture: tex,
       uppercase: true,
       editable: true,
-      antialiasing: false
+      antialiasing: false,
+      backgroundColor: '#9B5BD0',
     });
 
     text.x = 100;
