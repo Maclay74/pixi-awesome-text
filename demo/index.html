@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>SDF text renderer example</title>
-    <script src="./assets/roboto.js"></script>
+    <script src="./assets/roboto-bold.js"></script>
     <script src="../node_modules/pixi.js/dist/pixi.js"></script>
     <script src="../dist/pixi-awesome-text.min.js"></script>
     <style>
@@ -46,7 +46,7 @@
 
   var fontData = {
     data: 'assets/robot.js',
-    image: 'assets/roboto.png'
+    image: 'assets/roboto-bold.png'
   };
 
   PIXI.loader.add(fontData.image, fontData.image).load((loader, resources) => {
@@ -73,9 +73,14 @@
     text.x = 100;
     text.y = 100;
 
+
+
     let container = new PIXI.Container();
     container.x = 100;
     container.y = 100;
+
+    container.scale.x = 1.5;
+    container.scale.y = 1.5;
 
     container.addChild(text);
     app.stage.addChild(container);

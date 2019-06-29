@@ -148,14 +148,7 @@ class Select {
     if (event.data.button !== 0) return;
 
     let position = event.data.global;
-
-    const ownerPosition = this.owner.getGlobalPosition();
-
-    position.x -= ownerPosition.x;
-    position.y -= ownerPosition.y;
-
-    position.x = position.x /  this.owner.scale.x;
-    position.y = position.y / this.owner.scale.y;
+    position = this.transformPosition(position);
 
     const closestLetter = this.getClosestGlyph(position.x , position.y);
 
@@ -166,14 +159,7 @@ class Select {
 
   onMouseMove(event) {
     let position = event.data.global;
-
-    const ownerPosition = this.owner.getGlobalPosition();
-
-    position.x -= ownerPosition.x;
-    position.y -= ownerPosition.y;
-
-    position.x = position.x / this.owner.scale.x;
-    position.y = position.y / this.owner.scale.y;
+    position = this.transformPosition(position);
 
     const closestLetter = this.getClosestGlyph(position.x  , position.y);
     let index = this.owner.layout.glyphs.indexOf(closestLetter);
@@ -187,16 +173,9 @@ class Select {
     if (event.data.button !== 0) return;
 
     let position = event.data.global;
-    const ownerPosition = this.owner.getGlobalPosition();
-
-    position.x -= ownerPosition.x;
-    position.y -= ownerPosition.y;
-
-    position.x = position.x / this.owner.scale.x;
-    position.y = position.y / this.owner.scale.y;
+    position = this.transformPosition(position);
 
     const closestLetter = this.getClosestGlyph(position.x , position.y);
-
 
 
     // -1 means that we at the start of the line
@@ -205,6 +184,19 @@ class Select {
     } else {
       this.owner.input.glyphIndex = this.owner.layout.glyphs.indexOf(closestLetter);
     }
+  }
+
+  transformPosition(position) {
+    const ownerPosition = this.owner.getGlobalPosition();
+    const transform = this.owner.worldTransform;
+
+    position.x -= transform.tx;
+    position.y -= transform.ty;
+
+    position.x = position.x / transform.a;
+    position.y = position.y / transform.d;
+
+    return position;
   }
 
   clearSelectedRange() {
