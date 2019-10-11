@@ -12,6 +12,7 @@
             color: white;
             margin: 0;
         }
+
         a, a:visited {
             color: #39FF14;
         }
@@ -24,68 +25,65 @@
 <script>
 
 
-  PIXI.settings.MIPMAP_TEXTURES = false;
+    //PIXI.settings.MIPMAP_TEXTURES = false;
 
-  var app = new PIXI.Application(1800, 800, {
-    transparent: true,
-    antialias: true
-  });
+    var app = new PIXI.Application();
 
-  app.renderer.plugins.interaction.on( 'mousedown', e => {
+    /*app.renderer.plugins.interaction.on('mousedown', e => {
 
-    if (PIXI.extras.AwesomeText.currentEditingElement != null) {
-      if (e.currentTarget !== PIXI.extras.AwesomeText.currentEditingElement) {
-        PIXI.extras.AwesomeText.currentEditingElement.setState(PIXI.extras.AwesomeText.states.regular);
-      }
-    }
+        if (PIXI.extras.AwesomeText.currentEditingElement != null) {
+            if (e.currentTarget !== PIXI.extras.AwesomeText.currentEditingElement) {
+                PIXI.extras.AwesomeText.currentEditingElement.setState(PIXI.extras.AwesomeText.states.regular);
+            }
+        }
 
-  });
+    });*/
 
-  document.body.appendChild(app.view);
+    document.body.appendChild(app.view);
 
 
-  var fontData = {
-    data: 'assets/robot.js',
-    image: 'assets/roboto-bold.png'
-  };
+    var fontData = {
+        data: 'assets/robot.js',
+        image: 'assets/roboto-bold.png'
+    };
 
-  PIXI.loader.add(fontData.image, fontData.image).load((loader, resources) => {
+    PIXI.Loader.shared.add(fontData.image, fontData.image).load((loader, resources) => {
 
-    font = roboto_font;
-    tex = resources[fontData.image].texture;
+        font = roboto_font;
+        tex = resources[fontData.image].texture;
 
-    window.text = new PIXI.extras.AwesomeText("Hello darkness, my old friend I've come to talk with you again Because a vision softly creeping Left its seeds while I was sleeping", {
-      fontSize: 13,
-      fill: '#ffffff',
-      breakWords: true,
-      wordWrapWidth: 500,
-      align: 'left',
-      uppercase: true,
-    }, {
-      font: font,
-      texture: tex,
-      uppercase: true,
-      editable: true,
-      antialiasing: false,
-      backgroundColor: '#9B5BD0',
+        window.text = new PIXI.extras.AwesomeText("Hello darkness, my old friend I've come to talk with you again Because a vision softly creeping Left its seeds while I was sleeping", {
+            fontSize: 13,
+            fill: '#ffffff',
+            breakWords: true,
+            wordWrapWidth: 500,
+            align: 'left',
+            uppercase: true,
+        }, {
+            font: font,
+            texture: tex,
+            uppercase: true,
+            editable: true,
+            antialiasing: false,
+            backgroundColor: '#9B5BD0',
+        });
+
+        let container = new PIXI.Container();
+        container.x = 100;
+        container.y = 100;
+
+        container.scale.x = 1.5;
+        container.scale.y = 1.5;
+
+        container.addChild(text)
+
+        app.stage.addChild(container);
+
+        app.ticker.add((delta) => {
+            text.rotation += 0.01;
+        });
+
     });
-
-    text.x = 100;
-    text.y = 100;
-
-
-
-    let container = new PIXI.Container();
-    container.x = 100;
-    container.y = 100;
-
-    container.scale.x = 1.5;
-    container.scale.y = 1.5;
-
-    container.addChild(text);
-    app.stage.addChild(container);
-
-  });
 
 </script>
 </body>

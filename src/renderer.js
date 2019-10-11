@@ -151,6 +151,6 @@ class AwesomeTextRenderer extends PIXI.ObjectRenderer {
 
 }
 
-PIXI.WebGLRenderer.registerPlugin('AwesomeTextRenderer', AwesomeTextRenderer);
+PIXI.Renderer.registerPlugin('AwesomeTextRenderer', AwesomeTextRenderer);
 
 export default AwesomeTextRenderer

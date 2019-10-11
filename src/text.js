@@ -3,7 +3,7 @@ import TextLayout from './layout';
 import Select from './select'
 import Input from './input'
 
-class AwesomeText extends PIXI.mesh.Mesh {
+class AwesomeText extends PIXI.SimpleMesh {
 
   static scale = 1.0;
   static states = {regular: 0, editable: 1, selecting: 2};
