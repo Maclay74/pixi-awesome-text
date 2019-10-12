@@ -27,7 +27,9 @@
 
     //PIXI.settings.MIPMAP_TEXTURES = false;
 
-    var app = new PIXI.Application();
+    var app = new PIXI.Application({
+        backgroundColor: 0x9B5BD0
+    });
 
     /*app.renderer.plugins.interaction.on('mousedown', e => {
 
@@ -80,7 +82,7 @@
         app.stage.addChild(container);
 
         app.ticker.add((delta) => {
-            text.rotation += 0.01;
+            //text.rotation += 0.01;
         });
 
     });

@@ -52,11 +52,11 @@ vec3 subpixel( float v, float a ) {
     return res;
 }
 
-void main() {
+void main2() {
     gl_FragColor = vec4(1.0, 1.0, 1.0,1.0);
 }
 
-void main2(void) {
+void main(void) {
 
     // Sampling the texture, L pattern
     float sdf       = texture2D( uSampler, tc0 ).r;
