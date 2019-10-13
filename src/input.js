@@ -14,8 +14,8 @@ class Input {
     if (this._glyphIndex < -1)
       this._glyphIndex = -1;
 
-    if (this._glyphIndex > this.owner.layout.glyphs.length)
-      this._glyphIndex = this.owner.layout.glyphs.length;
+    if (this._glyphIndex > this.owner.awesomeText.layout.glyphs.length)
+      this._glyphIndex = this.owner.awesomeText.layout.glyphs.length;
 
     this.update();
   }
@@ -38,10 +38,10 @@ class Input {
   }
 
   constructor(owner) {
-    this.owner = owner;
+    this.owner = owner.container;
     this.metrics = owner.metrics;
     this.layout = owner.layout;
-    this.canvas = document.getElementsByTagName("canvas")[0]
+    this.canvas = document.getElementsByTagName("canvas")[0];
 
     this.createField();
     this.disable();
@@ -82,7 +82,7 @@ class Input {
     this.inputElement.style.zIndex = 2;
     this.inputElement.style.pointerEvents = "none";
     this.inputElement.style.outline = "none";
-    this.inputElement.style.color = this.owner.style.fill;
+    this.inputElement.style.color = this.owner.awesomeText.style.fill;
     this.inputElement.style.transformOrigin= "left top";
     this.inputElement.style.transform = `matrix(${transform.join(", ")})`;
     this.inputElement.style.padding = "0";
@@ -95,10 +95,10 @@ class Input {
 
   update() {
 
-    this.metrics = this.owner.metrics;
-    this.layout = this.owner.layout;
+    this.metrics = this.owner.awesomeText.metrics;
+    this.layout = this.owner.awesomeText.layout;
 
-    const {glyphs} = this.owner.layout;
+    const {glyphs} = this.owner.awesomeText.layout;
 
     if (this.glyphIndex >= glyphs.length) {
       this.glyphIndex = glyphs.length - 1;
@@ -111,7 +111,7 @@ class Input {
     };
 
     // if string is empty, put caret at the beginning
-    if (this.owner.layout.glyphs.length === -1) {
+    if (this.owner.awesomeText.layout.glyphs.length === -1) {
 
       // if we on the last glyph, place caret after it
     }else if (this.glyphIndex === glyphs.length) {
@@ -129,11 +129,10 @@ class Input {
       glyphMetrics.y += selectedGlyph.metrics.y;
     } else {
 
-      glyphMetrics.y += this.owner.style.lineHeight;
+      glyphMetrics.y += this.owner.awesomeText.style.lineHeight;
     }
 
     const transform = Object.values(this.owner.transform.worldTransform).slice(0, 6);
-
 
     this.inputElement.style.transform = `matrix(${transform.join(", ")})`;
     this.inputElement.style.height = this.metrics.lineHeight + "px";
@@ -145,9 +144,9 @@ class Input {
 
   onInput(event) {
 
-    const { range } = this.owner.select;
+    const { range } = this.owner.awesomeText.select;
 
-    this.owner.select.clearSelectedRange();
+    this.owner.awesomeText.select.clearSelectedRange();
 
     event.target.value = "";
 
@@ -156,36 +155,36 @@ class Input {
     // Content we are about to add
     let textToAdd = event.data;
 
-    if (this.owner.config.uppercase) {
+    if (this.owner.awesomeText.config.uppercase) {
       textToAdd = textToAdd.toUpperCase();
     }
 
-    if (this.owner.config.lowercase) {
+    if (this.owner.awesomeText.config.lowercase) {
       textToAdd = textToAdd.toLowerCase();
     }
 
     // If text is empty now
-    if (this.owner.layout.glyphs.length === 0) {
-      this.owner.text = textToAdd;
+    if (this.owner.awesomeText.layout.glyphs.length === 0) {
+      this.owner.awesomeText.text = textToAdd;
       this.glyphIndex = 1;
 
     // If caret is at the end of the text
-    } else if (this.glyphIndex === this.owner.layout.glyphs.length - 1) {
-      this.owner.text += textToAdd;
+    } else if (this.glyphIndex === this.owner.awesomeText.layout.glyphs.length - 1) {
+      this.owner.awesomeText.text += textToAdd;
       this.glyphIndex++;
 
     // If we in the middle of the line
     } else {
-      this.owner.insertString(++this.glyphIndex, textToAdd);
+      this.owner.awesomeText.insertString(++this.glyphIndex, textToAdd);
       //this.glyphIndex++;
     }
-    this.owner.select.setRange(0, false);
+    this.owner.awesomeText.select.setRange(0, false);
 
   }
 
   onKeydown(event) {
 
-    const {range} = this.owner.select;
+    const {range} = this.owner.awesomeText.select;
 
     switch (event.key) {
       case "ArrowUp":
@@ -211,7 +210,7 @@ class Input {
 
           // Just move cursor
         } else {
-          this.owner.select.setRange(0, false);
+          this.owner.awesomeText.select.setRange(0, false);
           this.show();
           this.glyphIndex--;
         }
@@ -229,7 +228,7 @@ class Input {
 
         // Just move index
         } else {
-          this.owner.select.setRange(0, false);
+          this.owner.awesomeText.select.setRange(0, false);
           this.show();
           this.glyphIndex++;
         }
@@ -238,17 +237,17 @@ class Input {
 
       case "Backspace":
         if (range[1] !== null) {
-          this.owner.select.clearSelectedRange();
+          this.owner.awesomeText.select.clearSelectedRange();
         } else {
-            this.owner.removeString(this.glyphIndex--, 0);
+            this.owner.awesomeText.removeString(this.glyphIndex--, 0);
         }
         break;
 
       case "Delete":
         if (range[1] !== null) {
-          this.owner.select.clearSelectedRange();
+          this.owner.awesomeText.select.clearSelectedRange();
         } else {
-            this.owner.removeString(this.glyphIndex + 1, 0);
+            this.owner.awesomeText.removeString(this.glyphIndex + 1, 0);
         }
 
         break;
@@ -256,7 +255,7 @@ class Input {
       // Select all
       case "a":
         if (event.ctrlKey) {
-          this.owner.select.setRange(0,this.owner.text.length - 1);
+          this.owner.awesomeText.select.setRange(0,this.owner.awesomeText.text.length - 1);
         }
 
         break;
@@ -321,7 +320,7 @@ class Input {
   }
 
   copyToClipboard(cut = false) {
-    const range = this.owner.select.range;
+    const range = this.owner.awesomeText.select.range;
     const start = Math.min.apply(null, range);
     const end = Math.max.apply(null, range);
 
@@ -331,7 +330,7 @@ class Input {
     this.inputElement.value = "";
 
     if (cut) {
-      this.owner.select.clearSelectedRange();
+      this.owner.awesomeText.select.clearSelectedRange();
     }
   }
 
@@ -339,23 +338,23 @@ class Input {
     event.preventDefault();
     let text = event.clipboardData.getData("text");
 
-    if (this.owner.config.uppercase)
+    if (this.owner.awesomeText.config.uppercase)
       text = text.toUpperCase();
 
-    if (this.owner.config.lowercase)
+    if (this.owner.awesomeText.config.lowercase)
       text = text.toLowerCase();
 
     // TODO remove all trash symbols
 
-    this.owner.select.clearSelectedRange();
+    this.owner.awesomeText.select.clearSelectedRange();
 
-    this.owner.insertString(this.glyphIndex + 1, text);
+    this.owner.awesomeText.insertString(this.glyphIndex + 1, text);
 
     this.glyphIndex = this.glyphIndex + text.length;
   }
 
   moveWithSelectRight() {
-    const range = this.owner.select.range;
+    const range = this.owner.awesomeText.select.range;
 
     if (range[1] === null) {
       ++this.glyphIndex;
@@ -365,16 +364,16 @@ class Input {
       range[1] = null;
       this.glyphIndex++;
     } else {
-      this.owner.select.expand(1);
+      this.owner.awesomeText.select.expand(1);
       this.glyphIndex++
     }
 
-    this.owner.select.update()
+    this.owner.awesomeText.select.update()
   }
 
   moveWithSelectLeft() {
 
-    const range = this.owner.select.range;
+    const range = this.owner.awesomeText.select.range;
 
     // If we only have cursor, no selection
     if (range[1] === null) {
@@ -387,17 +386,17 @@ class Input {
 
       // Regular selecting
     } else {
-      this.owner.select.expand(-1);
+      this.owner.awesomeText.select.expand(-1);
     }
 
     this.glyphIndex--;
 
-    this.owner.select.update();
+    this.owner.awesomeText.select.update();
   }
 
   moveDown() {
 
-    this.owner.select.setRange(null, false)
+    this.owner.awesomeText.select.setRange(null, false)
 
     const glyph = this.layout.glyphs[Math.max(0, this.glyphIndex)];
 
@@ -406,13 +405,13 @@ class Input {
       return;
     }
 
-    const newGlyph = this.owner.select.getClosestGlyph(glyph.position[0], glyph.position[1]);
+    const newGlyph = this.owner.awesomeText.select.getClosestGlyph(glyph.position[0], glyph.position[1]);
     this.glyphIndex = this.layout.glyphs.indexOf(newGlyph);
   }
 
   moveUp() {
 
-    this.owner.select.setRange(null, false)
+    this.owner.awesomeText.select.setRange(null, false)
 
     const glyph = this.layout.glyphs[this.glyphIndex];
 
@@ -421,7 +420,7 @@ class Input {
       return;
     }
 
-    const newGlyph = this.owner.select.getClosestGlyph(glyph.position[0], glyph.position[1] - this.metrics.lineHeight * 2);
+    const newGlyph = this.owner.awesomeText.select.getClosestGlyph(glyph.position[0], glyph.position[1] - this.metrics.lineHeight * 2);
     this.glyphIndex = this.layout.glyphs.indexOf(newGlyph);
 
   }

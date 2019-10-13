@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>SDF text renderer example</title>
-    <script src="./assets/roboto-bold.js"></script>
+    <script src="./assets/roboto.js"></script>
     <script src="../node_modules/pixi.js/dist/pixi.js"></script>
     <script src="../dist/pixi-awesome-text.min.js"></script>
     <style>
@@ -25,13 +25,14 @@
 <script>
 
 
-    //PIXI.settings.MIPMAP_TEXTURES = false;
+    PIXI.settings.MIPMAP_TEXTURES = PIXI.MIPMAP_MODES.OFF;
 
-    var app = new PIXI.Application({
-        backgroundColor: 0x9B5BD0
+    const app = new PIXI.Application({
+        backgroundColor: 0x9B5BD0,
+        mipmapTextures: PIXI.MIPMAP_MODES.OFF
     });
 
-    /*app.renderer.plugins.interaction.on('mousedown', e => {
+   /* app.renderer.plugins.interaction.on('mousedown', e => {
 
         if (PIXI.extras.AwesomeText.currentEditingElement != null) {
             if (e.currentTarget !== PIXI.extras.AwesomeText.currentEditingElement) {
@@ -46,7 +47,7 @@
 
     var fontData = {
         data: 'assets/robot.js',
-        image: 'assets/roboto-bold.png'
+        image: 'assets/roboto.png'
     };
 
     PIXI.Loader.shared.add(fontData.image, fontData.image).load((loader, resources) => {
@@ -54,7 +55,7 @@
         font = roboto_font;
         tex = resources[fontData.image].texture;
 
-        window.text = new PIXI.extras.AwesomeText("Hello darkness, my old friend I've come to talk with you again Because a vision softly creeping Left its seeds while I was sleeping", {
+        window.text = new PIXI.extras.AwesomeText("Hello darkness, my old friend. I've come to talk with you again Because a vision softly creeping Left its seeds while I was sleeping", {
             fontSize: 13,
             fill: '#ffffff',
             breakWords: true,
@@ -64,9 +65,9 @@
         }, {
             font: font,
             texture: tex,
-            uppercase: true,
+            uppercase: false,
             editable: true,
-            antialiasing: false,
+            antialiasing: true,
             backgroundColor: '#9B5BD0',
         });
 

@@ -1,6 +1,4 @@
-import Renderer from "./renderer";
 import Text from "./new";
-import Layout from "./layout";
 
 Object.assign(PIXI.extras, {
   AwesomeText: Text
@@ -15,8 +13,6 @@ if (typeof PIXI !== 'undefined') {
 }
 
 export {
-  Text,
-  Renderer,
-  Layout
+  Text
 }
 

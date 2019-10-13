@@ -1,4 +1,6 @@
 const createIndices = require("quad-indices")
+const vertexShader = require("./shaders/select/vert.glsl");
+const fragmentShader = require("./shaders/select/frag.glsl");
 
 class Select {
 
@@ -8,36 +10,86 @@ class Select {
   dirty = false;
   indexBuffer = false;
   owner = null;
+  _enabled = false;
+
+  set enabled(value) {
+    this._enabled = value;
+    this.update()
+  }
+
+  get enabled() {
+    return this._enabled
+  }
 
   constructor(owner) {
-    this.owner = owner;
+    this.owner = owner.container;
     this.metrics = owner.metrics;
     this.layout = owner.layout;
   }
 
-  update() {
-    this.metrics = this.owner.metrics;
-    this.layout = this.owner.layout;
+  createGeometry() {
 
-    // Vertices array for all selected lines
-    this.vertices = new Float32Array(this.layout.linesCount * 4 * 2);
+    // Arrays for vertices, uvs and sdf
+    this.vertices = new Float32Array(this.layout.lettersCount * 4 * 2);
 
-    if (this.range[1] !== null)
     this.buildVertices();
 
+    // Prepare indices
     this.indices = createIndices({
       clockwise: true,
       type: 'uint16',
-      count:this.layout.linesCount
+      count: this.layout.linesCount
     });
 
-    this.dirty = true;
-    this.indexBuffer = true;
+    // Fill up the geometry
+    return new PIXI.Geometry()
+        .addAttribute('aVertexPosition', // the attribute name
+            this.vertices, // x, y
+            2) // the size of the attribute
+        .addIndex(this.indices)
+  }
+
+  createMesh({geometry = new PIXI.Geometry(), vert = "", frag = ""}) {
+    // Pass uniforms to the shader
+
+    const uniforms = {
+      bg_color: PIXI.utils.hex2rgb(this.owner.awesomeText.backgroundColor.replace("#", "0x")),
+    };
+
+    if (!this.shader) {
+      this.shader = PIXI.Shader.from(vert, frag, uniforms);
+    }
+
+    this.shader.uniforms.enabled = this.enabled ? 1.0 : 0.0
+
+    return new PIXI.Mesh(geometry, this.shader);
+  }
+
+  update() {
+    this.metrics = this.owner.awesomeText.metrics;
+    this.layout = this.owner.awesomeText.layout;
+
+    if (this.mesh)
+      this.owner.removeChild(this.mesh);
+
+    if (this.range[1] !== null) {
+      const geometry = this.createGeometry();
+      this.mesh = this.createMesh({
+        geometry,
+        vert: vertexShader,
+        frag: fragmentShader
+      });
+
+      this.mesh.blendMode = PIXI.BLEND_MODES.NORMAL_NPM;
+
+      this.owner.addChild(this.mesh);
+    }
+
   }
 
   setRange(start = null, end = null) {
 
-    const {glyphs} = this.owner.layout;
+    const {glyphs} = this.owner.awesomeText.layout;
 
     if (start === null) start = this.range[0];
     if (end === null) end = this.range[1];
@@ -56,7 +108,7 @@ class Select {
 
   buildVertices() {
 
-    this.metrics = this.owner.layout.metrics;
+    this.metrics = this.owner.awesomeText.layout.metrics;
     // Select range
     let start = this.layout.glyphs[Math.min.apply(null,this.range)];
     let end = this.layout.glyphs[Math.max.apply(null,this.range)];
@@ -114,10 +166,10 @@ class Select {
   }
 
   getClosestGlyph(x, y) {
-    this.metrics = this.owner.metrics;
-    this.layout = this.owner.layout;
+    this.metrics = this.owner.awesomeText.metrics;
+    this.layout = this.owner.awesomeText.layout;
 
-    const { glyphs } = this.owner.layout;
+    const { glyphs } = this.owner.awesomeText.layout;
 
     const lineHeight = this.metrics.lineHeight;
     const selectingLine = Math.floor(y / this.metrics.lineHeight);
@@ -152,7 +204,7 @@ class Select {
 
     const closestLetter = this.getClosestGlyph(position.x , position.y);
 
-    let index = this.owner.layout.glyphs.indexOf(closestLetter);
+    let index = this.owner.awesomeText.layout.glyphs.indexOf(closestLetter);
 
     this.setRange(index + 1, false );
   }
@@ -162,7 +214,7 @@ class Select {
     position = this.transformPosition(position);
 
     const closestLetter = this.getClosestGlyph(position.x  , position.y);
-    let index = this.owner.layout.glyphs.indexOf(closestLetter);
+    let index = this.owner.awesomeText.layout.glyphs.indexOf(closestLetter);
 
     this.setRange(null, index + 1);
   }
@@ -180,9 +232,9 @@ class Select {
 
     // -1 means that we at the start of the line
     if (closestLetter === -1) {
-      this.owner.input.glyphIndex = closestLetter;
+      this.owner.awesomeText.input.glyphIndex = closestLetter;
     } else {
-      this.owner.input.glyphIndex = this.owner.layout.glyphs.indexOf(closestLetter);
+      this.owner.awesomeText.input.glyphIndex = this.owner.awesomeText.layout.glyphs.indexOf(closestLetter);
     }
   }
 
@@ -205,12 +257,12 @@ class Select {
 
     // If user selected some text, remove it
     if (range[1] !== null) {
-      this.owner.input.glyphIndex = Math.min(range[0] - 1, range[1] - 1);
+      this.owner.awesomeText.input.glyphIndex = Math.min(range[0] - 1, range[1] - 1);
       const removeIndex = Math.min.apply(null, range);
       const removeLength = Math.abs(range[0] - range[1]);
-      this.owner.select.setRange(0,false);
-      this.owner.removeString(removeIndex, removeLength);
-      this.owner.input.show();
+      this.owner.awesomeText.select.setRange(0,false);
+      this.owner.awesomeText.removeString(removeIndex, removeLength);
+      this.owner.awesomeText.input.show();
     }
   }
 

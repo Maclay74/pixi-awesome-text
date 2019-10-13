@@ -1,7 +1,7 @@
-import AwesomeText from "./text";
-
 const createIndices = require("quad-indices")
 import TextLayout from './layout';
+import Select from "./select";
+import Input from "./input";
 
 const vertexShader = require("./shaders/text/vert.glsl");
 const fragmentShader = require("./shaders/text/frag.glsl");
@@ -12,8 +12,20 @@ class Text {
     static states = {regular: 0, editable: 1, selecting: 2};
     static currentEditingElement = null;
 
+    state = Text.states.regular;
+    clicksCount = 0;
+
+    config = {
+        editable: false,
+        uppercase: false,
+        lowercase: false,
+        antialiasing: true,
+        backgroundColor: "#000000"
+    };
+
     constructor(text, style, config) {
 
+        // Basic params
         this.style = new PIXI.TextStyle(style);
         this.config = {...this.config, ...config};
         this.backgroundColor = this.config.backgroundColor;
@@ -21,16 +33,36 @@ class Text {
         this._font = config.font; // Font information
         this._texture = config.texture; // Texture with glyphs
 
-        this.layout = new TextLayout(this, {
-            fontSize: this.style.fontSize,
-            wrapWords: this.style.breakWords,
-            wrapperWidth: this.style.wordWrapWidth,
-            align: this.style.align,
-            lineHeight: this.style.lineHeight,
-        });
+        this.layout = this.createLayout(this.style);
 
-        this.metrics = this.fontMetrics(this.style.fontSize, 0.0);
-        this.layout.update();
+        // Create structure
+        this.container = new PIXI.Container();
+        this.container.awesomeText = this;
+
+        // If field is editable, prepare it
+        if (this.config.editable) {
+            this.container.interactive = true;
+            this.container.buttonMode = true;
+
+            this.select = new Select(this);
+            this.input = new Input(this);
+            this.setState(Text.states.regular);
+        }
+
+        this.update();
+
+        return this.container;
+    }
+
+    createLayout = ({fontSize = 13, breakWords : wrapWords  = false, wrapperWidth = 400, align = "left", lineHeight = 17}) => new TextLayout(this, {
+        fontSize,
+        wrapWords,
+        wrapperWidth,
+        align,
+        lineHeight,
+    });
+
+    createGeometry() {
 
         // Arrays for vertices, uvs and sdf
         this.vertices = new Float32Array(this.layout.lettersCount * 4 * 2);
@@ -50,7 +82,8 @@ class Text {
             count: this.layout.lettersCount
         });
 
-        this.geometry = new PIXI.Geometry()
+        // Fill up the geometry
+        return new PIXI.Geometry()
             .addAttribute('aVertexPosition', // the attribute name
                 this.vertices, // x, y
                 2) // the size of the attribute
@@ -61,19 +94,12 @@ class Text {
 
             .addAttribute('aSdfSize', // the attribute name
                 this.sdfSizes, // u, v
-                    1) // the size of the attribute
+                1) // the size of the attribute
             .addIndex(this.indices)
+    }
 
-
-      /*  glData.shader.uniforms.uSampler = this.renderer.bindTexture(source.texture);
-        glData.shader.uniforms.translationMatrix = source.worldTransform.toArray(true);
-
-        glData.shader.uniforms.hint_amount = source.config.antialiasing * 1;
-        glData.shader.uniforms.sdfMultiplier = AwesomeText.scale;
-        glData.shader.uniforms.subpixel_amount = source.config.antialiasing * 1;
-        glData.shader.uniforms.font_color = PIXI.utils.hex2rgb(source.style.fill.replace("#", "0x"));
-        glData.shader.uniforms.bg_color = PIXI.utils.hex2rgb(source.backgroundColor.replace("#", "0x"));*/
-
+    createMesh({geometry = new PIXI.Geometry(), vert = "", frag = ""}) {
+        // Pass uniforms to the shader
         const uniforms = {
             uSampler: this._texture,
             hint_amount: this.config.antialiasing * 1,
@@ -83,12 +109,39 @@ class Text {
             bg_color: PIXI.utils.hex2rgb(this.backgroundColor.replace("#", "0x"))
         };
 
-        this.shader = PIXI.Shader.from(vertexShader, fragmentShader, uniforms);
-        this.triangle = new PIXI.Mesh(this.geometry, this.shader);
+        if (!this.textShader) {
+            this.textShader = PIXI.Shader.from(vert, frag, uniforms);
+        }
 
-        this.triangle.awesomeText = this;
+        return new PIXI.Mesh(geometry, this.textShader);
+    }
 
-        return this.triangle;
+    update() {
+        this.metrics = this.fontMetrics(this.style.fontSize, 0.0);
+        this.layout.update();
+
+        if (this.config.editable) {
+            this.select.update();
+            this.input.update();
+        }
+
+        if (this.textGeometry)
+            this.textGeometry.destroy();
+
+        if (this.textMesh)
+            this.container.removeChild(this.textMesh)
+
+        // Create text geometry (vertices, uvs, etc)
+        this.textGeometry = this.createGeometry();
+
+        // Create text mesh
+        this.textMesh = this.createMesh({
+            geometry : this.textGeometry,
+            vert: vertexShader,
+            frag: fragmentShader
+        });
+
+        this.container.addChild(this.textMesh);
     }
 
     get texture() {
@@ -105,7 +158,121 @@ class Text {
 
     set text(value) {
         this._text = value;
-        //this.update();
+        this.update();
+    }
+
+    setState(newState) {
+
+        if (newState === Text.states.editable || newState === Text.states.selecting) {
+            this.select.enabled = true;
+        } else {
+            this.select.enabled = false;
+        }
+
+        if (!this.config.editable) {
+            return;
+        }
+
+        const { states } = Text;
+
+        if (!newState in Object.values(states)) return;
+
+        switch (newState) {
+            case states.regular:
+                this.setRegularState();
+                break;
+            case states.editable:
+                if (this.state === Text.states.regular) {
+                    this.setEditableState();
+                }
+                break;
+        }
+
+        this.state = newState;
+    }
+
+    setRegularState() {
+
+        Text.currentEditingElement = null;
+
+        this.container.off("mousedown");
+        this.container.off("mousemove");
+        this.container.off("mouseup");
+        this.container.off("mouseupoutside");
+
+        this.input.enabled = false;
+
+        this.container.on("click", e => {
+            if (this.clicksCount === 1) {
+                this.clicksCount = 0;
+                this.setState(Text.states.editable);
+            }
+
+            if (this.clicksCount === 0) {
+                this.clicksCount++;
+                window.setTimeout(() => {
+                    this.clicksCount = 0;
+                }, 300)
+            }
+        })
+
+    }
+
+    setEditableState() {
+
+        // Disable previously enabled field
+        if (Text.currentEditingElement != null) {
+            Text.currentEditingElement.setState(Text.states.regular);
+        }
+        Text.currentEditingElement = this;
+
+        // Disable unnecessary events
+        this.container.off("click");
+
+        this.input.enabled = true;
+        this.input.hide();
+
+        // Select all characters
+        this.select.setRange(0,this.text.length - 1);
+        this.input.inputElement.focus();
+
+        this.container.on("mousedown", e => {
+            this.setState(Text.states.selecting);
+            this.select.onMouseDown(e);
+            this.input.show();
+            this.input.update(e);
+        });
+
+        this.container.on("mousemove", e => {
+            const {movementX, movementY} = e.data.originalEvent;
+            if (movementX === 0 && movementY === 0) return;
+
+            if (this.state === Text.states.selecting) {
+                this.select.onMouseMove(e);
+                this.input.hide();
+            }
+        });
+
+        this.container.on("mouseup", e => {
+            this.setState(Text.states.editable);
+            this.select.onMouseUp(e);
+        });
+
+        this.container.on("mouseupoutside", e => {
+            this.setState(Text.states.editable);
+            this.select.onMouseUp(e);
+        });
+
+    }
+
+    insertString(index, string) {
+        this.text = this.text.substr(0, index) + string + this.text.substr(index);
+    }
+
+    removeString(index, length) {
+        let newText = this.text.split("");
+        newText.splice(index, length + 1);
+        this.text = newText.join("");
     }
 
     writeString( string, font, font_metrics, pos) {
